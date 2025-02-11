@@ -38,3 +38,5 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## Packages
 - [Embla Carousel Autoplay](https://www.npmjs.com/package/embla-carousel-autoplay)
+- [Mongoose](https://www.npmjs.com/package/mongoose)
+- [Zod](https://www.npmjs.com/package/zod)
