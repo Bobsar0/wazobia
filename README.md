@@ -41,3 +41,4 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 - [Mongoose](https://www.npmjs.com/package/mongoose)
 - [Zod](https://www.npmjs.com/package/zod)
 - [React Medium Image Zoom](https://www.npmjs.com/package/react-medium-image-zoom)
+- [Zustand](https://www.npmjs.com/package/zustand)
