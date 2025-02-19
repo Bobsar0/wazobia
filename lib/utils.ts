@@ -69,4 +69,28 @@ export const toSlug = (text: string): string =>
     .replace(/[^\w\s-]+/g, '')
     .replace(/\s+/g, '-')
     .replace(/^-+|-+$/g, '')
-    .replace(/-+/g, '-')
+    .replace(/-+/g, '-');
+
+/**
+ * Rounds a number to two decimal places.
+ *
+ * This function uses a technique to mitigate floating-point precision 
+ * issues by adding a small epsilon value before rounding.
+ *
+ * @param num - The number to round.
+ * @returns The number rounded to two decimal places.
+ */
+export const round2 = (num: number) => 
+  Math.round((num + Number.EPSILON) * 100) / 100
+
+/**
+ * Generates a random 24-character string, consisting only of digits.
+ *
+ * This is intended to be used as a unique identifier, such as for a document ID in a database.
+ *
+ * Note that this function does not guarantee that the generated IDs will be unique. If you need
+ * to generate IDs that are guaranteed unique, consider using a UUID library such as `uuid`.
+ */
+export const generateId = () =>
+  Array.from({length: 24}, () => Math.floor(Math.random() * 10)).join('')
+

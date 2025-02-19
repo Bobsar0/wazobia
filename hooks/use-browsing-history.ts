@@ -24,16 +24,16 @@ export default function useBrowsingHistory() {
   const { products } = browsingHistoryStore()
   return {
     products,
-/**
- * Adds a product to the browsing history.
- * 
- * This function checks if the product already exists in the browsing history.
- * If it does, the existing product is removed to avoid duplicates. The product
- * is then added to the beginning of the history. If the history exceeds 10 items,
- * the oldest item is removed to maintain the limit.
- * 
- * @param product - The product to be added, containing an id and category.
- */
+    /**
+     * Adds a product to the browsing history.
+     * 
+     * This function checks if the product already exists in the browsing history.
+     * If it does, the existing product is removed to avoid duplicates. The product
+     * is then added to the beginning of the history. If the history exceeds 10 items,
+     * the oldest item is removed to maintain the limit.
+     * 
+     * @param product - The product to be added, containing an id and category.
+     */
 
     addItem: (product: { id: string; category: string }) => {
       const index = products.findIndex((p) => p.id === product.id)

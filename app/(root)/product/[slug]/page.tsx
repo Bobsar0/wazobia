@@ -12,7 +12,17 @@ import ProductSlider from '@/components/shared/product/product-slider'
 import Rating from '@/components/shared/product/rating'
 import BrowsingHistoryList from '@/components/shared/browsing-history-list'
 import AddToBrowsingHistory from '@/components/shared/product/add-to-browsing-history'
+import AddToCart from '@/components/shared/product/add-to-cart'
+import { generateId, round2 } from '@/lib/utils'
 
+/**
+ * Generates metadata for the product detail page.
+ *
+ * @param {Object} props
+ * @prop {Promise<{ slug: string }>} params - The URL parameters.
+ *
+ * @returns {Promise<{ title: string; description: string }>} The metadata to be used for the page.
+ */
 export async function generateMetadata(props: {
   params: Promise<{ slug: string }>
 }) {
@@ -136,8 +146,7 @@ export default async function ProductDetails(props: {
                     Out of Stock
                   </div>
                 )}
-
-                {/* {product.countInStock !== 0 && (
+                {product.countInStock !== 0 && (
                   <div className='flex justify-center items-center'>
                     <AddToCart
                       item={{
@@ -155,7 +164,7 @@ export default async function ProductDetails(props: {
                       }}
                     />
                   </div>
-                )} */}
+                )}
               </CardContent>
             </Card>
           </div>
