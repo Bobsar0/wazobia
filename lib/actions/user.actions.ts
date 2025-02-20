@@ -1,8 +1,13 @@
 'use server'
 
 import { signIn, signOut } from '@/auth'
-import { IUserSignIn } from '@/types'
+import { IUserSignIn, IUserSignUp } from '@/types'
+import bcrypt from 'bcryptjs'
 import { redirect } from 'next/navigation'
+import { connectToDatabase } from '../db'
+import { formatError } from '../utils'
+import { UserSignUpSchema } from '../validator'
+import User from '../db/model/user.model'
 
 /**
  * Signs in a user with the provided credentials.
@@ -27,26 +32,27 @@ export const SignOut = async () => {
   redirect(redirectTo.redirect)
 }
 
-// // CREATE
-// export async function registerUser(userSignUp: IUserSignUp) {
-//   try {
-//     const user = await UserSignUpSchema.parseAsync({
-//       name: userSignUp.name,
-//       email: userSignUp.email,
-//       password: userSignUp.password,
-//       confirmPassword: userSignUp.confirmPassword,
-//     })
+// CREATE
 
-//     await connectToDatabase()
-//     await User.create({
-//       ...user,
-//       password: await bcrypt.hash(user.password, 5),
-//     })
-//     return { success: true, message: 'User created successfully' }
-//   } catch (error) {
-//     return { success: false, error: formatError(error) }
-//   }
-// }
+export async function registerUser(userSignUp: IUserSignUp) {
+  try {
+    const user = await UserSignUpSchema.parseAsync({
+      name: userSignUp.name,
+      email: userSignUp.email,
+      password: userSignUp.password,
+      confirmPassword: userSignUp.confirmPassword,
+    })
+
+    await connectToDatabase()
+    await User.create({
+      ...user,
+      password: await bcrypt.hash(user.password, 5),
+    })
+    return { success: true, message: 'User created successfully' }
+  } catch (error) {
+    return { success: false, error: formatError(error) }
+  }
+}
 
 // // DELETE
 

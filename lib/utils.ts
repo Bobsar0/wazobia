@@ -94,3 +94,44 @@ export const round2 = (num: number) =>
 export const generateId = () =>
   Array.from({length: 24}, () => Math.floor(Math.random() * 10)).join('')
 
+/**
+ * Formats an error object into a human-readable string message.
+ *
+ * This function handles different types of errors such as ZodError, ValidationError, 
+ * and MongoDB duplicate key errors, formatting them into a concise error message.
+ *
+ * - For ZodError, it extracts the path and message for each field error and joins them with a period.
+ * - For ValidationError, it extracts the message for each field error and joins them with a period.
+ * - For MongoDB duplicate key errors (error code 11000), it identifies the duplicate field and 
+ *   returns a message indicating that the field already exists.
+ * - For other errors, it returns the error message if it's a string, otherwise it stringifies the 
+ *   message object.
+ *
+ * @param error - The error object to format.
+ * @returns A string representing the formatted error message.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const formatError = (error: any): string => {
+  if (error.name === 'ZodError') {
+    const fieldErrors = Object.keys(error.errors).map((field) => {
+      const errorMessage = error.errors[field].message
+      return `${error.errors[field].path}: ${errorMessage}` // field: errorMessage
+    })
+    return fieldErrors.join('. ')
+  } else if (error.name === 'ValidationError') {
+    const fieldErrors = Object.keys(error.errors).map((field) => {
+      const errorMessage = error.errors[field].message
+      return errorMessage
+    })
+    return fieldErrors.join('. ')
+  } else if (error.code === 11000) {
+    const duplicateField = Object.keys(error.keyValue)[0]
+    return `${duplicateField} already exists`
+  } else {
+    // return 'Something went wrong. please try again'
+    return typeof error.message === 'string'
+      ? error.message
+      : JSON.stringify(error.message)
+  }
+}
+
