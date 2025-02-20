@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { APP_DESCRIPTION, APP_NAME, APP_SLOGAN } from "@/lib/constants";
+import ClientProviders from "@/components/shared/client-providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,6 +22,17 @@ export const metadata: Metadata = {
   description: `${APP_DESCRIPTION}`,
 };
 
+/**
+ * RootLayout is a functional component that defines the root HTML structure
+ * for the application. It sets the language to English and applies custom
+ * font variables and antialiasing to the body. The component wraps its
+ * children with ClientProviders to manage client-side state and context.
+ *
+ * @param {Object} props - The properties object.
+ * @param {React.ReactNode} props.children - The child components to be
+ * rendered within the layout.
+ */
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -31,7 +43,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <ClientProviders>{children}</ClientProviders>
       </body>
     </html>
   );
