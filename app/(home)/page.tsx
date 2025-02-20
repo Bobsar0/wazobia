@@ -8,7 +8,7 @@ import {
   getProductsByTag,
   getProductsForCard,
 } from '@/lib/actions/product.actions'
-import data from '@/lib/data'
+import data from '@/lib/data/data'
 import { toSlug } from '@/lib/utils'
 
 export default async function Home() {
@@ -81,7 +81,11 @@ export default async function Home() {
 
         <Card className='w-full rounded-none'>
           <CardContent className='p-4 items-center gap-3'>
-            <ProductSlider title="Best Selling Products" products={bestSellingProducts} hideDetails/>
+            <ProductSlider
+              title='Best Selling Products'
+              products={bestSellingProducts}
+              hideDetails
+            />
           </CardContent>
         </Card>
       </div>

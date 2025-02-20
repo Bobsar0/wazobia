@@ -1,18 +1,18 @@
-import Link from 'next/link'
 import React from 'react'
 import CartButton from './cart-button'
+import UserButton from './user-button'
 
 
+/**
+ * A simple menu component that displays a user button and a cart button.
+ *
+ * @returns A JSX element representing the menu.
+ */
 const Menu = () => {
   return (
     <div className='flex justify-end'>
       <nav className='flex gap-3 w-full'>
-        <Link href='/signin' className='flex items-center header-button'>
-          Hello, Sign in
-          {/* <UserIcon className='h-8 w-8'/>
-          <span className='font-bold'>Sign in</span> */}
-        </Link>
-
+        <UserButton />
         <CartButton />
       </nav>
     </div>

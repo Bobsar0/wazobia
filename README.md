@@ -42,3 +42,13 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 - [Zod](https://www.npmjs.com/package/zod)
 - [React Medium Image Zoom](https://www.npmjs.com/package/react-medium-image-zoom)
 - [Zustand](https://www.npmjs.com/package/zustand)
+- [bcryptjs](https://www.npmjs.com/package/bcryptjs)
+- [react-hook-form](https://www.npmjs.com/package/react-hook-form)
+- [next-auth@beta](https://www.npmjs.com/package/next-auth)
+- [MongoDB](https://www.npmjs.com/package/mongodb)
+- [MongoDB Adapter for Auth.js](https://www.npmjs.com/package/@auth/mongodb-adapter)
+- [@hookform/resolvers](https://www.npmjs.com/package/@hookform/resolvers)
+
+## Dev dependencies
+- [@types/bcryptjs](https://www.npmjs.com/package/@types/bcryptjs)
+
