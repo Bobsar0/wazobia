@@ -35,6 +35,9 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
+## Frameworks
+- Nextjs
+- [Resend](https://resend.com/)
 
 ## Packages
 - [Embla Carousel Autoplay](https://www.npmjs.com/package/embla-carousel-autoplay)
@@ -48,7 +51,9 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 - [MongoDB](https://www.npmjs.com/package/mongodb)
 - [MongoDB Adapter for Auth.js](https://www.npmjs.com/package/@auth/mongodb-adapter)
 - [@hookform/resolvers](https://www.npmjs.com/package/@hookform/resolvers)
+- npm i resend @react-email/components @paypal/react-paypal-js --legacy-peer-deps
+
 
 ## Dev dependencies
 - [@types/bcryptjs](https://www.npmjs.com/package/@types/bcryptjs)
-
+- npm i -D react-email --legacy-peer-deps

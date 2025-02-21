@@ -262,3 +262,12 @@ export const formatDateTime = (dateString: Date) => {
     timeOnly: formattedTime,
   }
 }
+
+/**
+ * Format a MongoDB ObjectId into a shorter string by taking the last 6 characters of the id.
+ * @param id The ObjectId to format.
+ * @returns A string with the last 6 characters of the ObjectId, prefixed with '..'.
+ */
+export function formatId(id: string) {
+  return `..${id.substring(id.length - 6)}`
+}
