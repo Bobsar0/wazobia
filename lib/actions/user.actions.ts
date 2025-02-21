@@ -18,9 +18,15 @@ import User from '../db/model/user.model'
 export async function signInWithCredentials(user: IUserSignIn) {
   return await signIn('credentials', { ...user, redirect: false })
 }
-// export const SignInWithGoogle = async () => {
-//   await signIn('google')
-// }
+
+/**
+ * Signs in the user with Google
+ *
+ * @returns {Promise<void>}
+ */
+export const SignInWithGoogle = async () => {
+  await signIn('google')
+}
 
 
 /**
