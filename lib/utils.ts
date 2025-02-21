@@ -135,3 +135,130 @@ export const formatError = (error: any): string => {
   }
 }
 
+/**
+ * Calculates a future date given a number of days.
+ *
+ * @param days - The number of days from today.
+ * @returns A Date object representing the future date.
+ */
+export function calculateFutureDate(days: number) {
+  const currentDate = new Date()
+  currentDate.setDate(currentDate.getDate() + days)
+  return currentDate
+}
+
+/**
+ * Given a year and month as a string in the format 'YYYY-MM', returns the month name.
+ *
+ * If the given month is the current month, the returned string will be suffixed with ' Ongoing'.
+ *
+ * @param yearMonth - The year and month as a string in the format 'YYYY-MM'.
+ * @returns The month name as a string.
+ */
+export function getMonthName(yearMonth: string): string {
+  const [year, month] = yearMonth.split('-').map(Number)
+  const date = new Date(year, month - 1)
+  const monthName = date.toLocaleString('default', { month: 'long' })
+  const now = new Date()
+
+  if (year === now.getFullYear() && month === now.getMonth() + 1) {
+    return `${monthName} Ongoing`
+  }
+  return monthName
+}
+
+/**
+ * Calculates a past date given a number of days.
+ *
+ * @param days - The number of days before today.
+ * @returns A Date object representing the past date.
+ */
+export function calculatePastDate(days: number) {
+  const currentDate = new Date()
+  currentDate.setDate(currentDate.getDate() - days)
+  return currentDate
+}
+
+/**
+ * Calculates the time remaining until midnight.
+ *
+ * This function returns the number of hours and minutes left from the current time
+ * until the next occurrence of midnight (12:00 AM).
+ *
+ * @returns An object containing the number of hours and minutes remaining until midnight.
+ */
+
+export function timeUntilMidnight(): { hours: number; minutes: number } {
+  const now = new Date()
+  const midnight = new Date()
+  midnight.setHours(24, 0, 0, 0) // Set to 12:00 AM (next day)
+
+  const diff = midnight.getTime() - now.getTime() // Difference in milliseconds
+  const hours = Math.floor(diff / (1000 * 60 * 60))
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+
+  return { hours, minutes }
+}
+
+/**
+ * Formats a date string into a date-time string, a date-only string, and a time-only string.
+ *
+ * The date-time string is formatted according to the following options:
+ * - month: short (e.g., 'Oct')
+ * - year: numeric (e.g., '2023')
+ * - day: numeric (e.g., '25')
+ * - hour: numeric (e.g., '8')
+ * - minute: numeric (e.g., '30')
+ * - hour12: true (use 12-hour clock)
+ *
+ * The date-only string is formatted according to the following options:
+ * - month: short (e.g., 'Oct')
+ * - year: numeric (e.g., '2023')
+ * - day: numeric (e.g., '25')
+ *
+ * The time-only string is formatted according to the following options:
+ * - hour: numeric (e.g., '8')
+ * - minute: numeric (e.g., '30')
+ * - hour12: true (use 12-hour clock)
+ *
+ * @param dateString - The date string to format.
+ * @returns An object with the formatted date-time string, date-only string, and time-only string.
+ */
+export const formatDateTime = (dateString: Date) => {
+  const dateTimeOptions: Intl.DateTimeFormatOptions = {
+    month: 'short', // abbreviated month name (e.g., 'Oct')
+    year: 'numeric', // abbreviated month name (e.g., 'Oct')
+    day: 'numeric', // numeric day of the month (e.g., '25')
+    hour: 'numeric', // numeric hour (e.g., '8')
+    minute: 'numeric', // numeric minute (e.g., '30')
+    hour12: true, // use 12-hour clock (true) or 24-hour clock (false)
+  }
+  const dateOptions: Intl.DateTimeFormatOptions = {
+    // weekday: 'short', // abbreviated weekday name (e.g., 'Mon')
+    month: 'short', // abbreviated month name (e.g., 'Oct')
+    year: 'numeric', // numeric year (e.g., '2023')
+    day: 'numeric', // numeric day of the month (e.g., '25')
+  }
+  const timeOptions: Intl.DateTimeFormatOptions = {
+    hour: 'numeric', // numeric hour (e.g., '8')
+    minute: 'numeric', // numeric minute (e.g., '30')
+    hour12: true, // use 12-hour clock (true) or 24-hour clock (false)
+  }
+  const formattedDateTime: string = new Date(dateString).toLocaleString(
+    'en-US',
+    dateTimeOptions
+  )
+  const formattedDate: string = new Date(dateString).toLocaleString(
+    'en-US',
+    dateOptions
+  )
+  const formattedTime: string = new Date(dateString).toLocaleString(
+    'en-US',
+    timeOptions
+  )
+  return {
+    dateTime: formattedDateTime,
+    dateOnly: formattedDate,
+    timeOnly: formattedTime,
+  }
+}

@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import { Cart, OrderItem } from '@/types'
+import { Cart, OrderItem, ShippingAddress } from '@/types'
 import { calcDeliveryDateAndPrice } from '@/lib/actions/order.actions'
 
 const initialState: Cart = {
@@ -11,7 +11,7 @@ const initialState: Cart = {
   shippingPrice: undefined,
   totalPrice: 0,
   paymentMethod: undefined,
-  // shippingAddress: undefined,
+  shippingAddress: undefined,
   deliveryDateIndex: undefined,
 }
 
@@ -20,10 +20,10 @@ interface CartState {
   addItem: (item: OrderItem, quantity: number) => Promise<string>
   updateItem: (item: OrderItem, quantity: number) => Promise<void>
   removeItem: (item: OrderItem) => void
-  // clearCart: () => void
-  // setShippingAddress: (shippingAddress: ShippingAddress) => Promise<void>
-  // setPaymentMethod: (paymentMethod: string) => void
-  // setDeliveryDateIndex: (index: number) => Promise<void>
+  clearCart: () => void
+  setShippingAddress: (shippingAddress: ShippingAddress) => Promise<void>
+  setPaymentMethod: (paymentMethod: string) => void
+  setDeliveryDateIndex: (index: number) => Promise<void>
 }
 
 const useCartStore = create(
@@ -44,8 +44,7 @@ const useCartStore = create(
        * @returns {Promise<string>} The client id of the item that was added to the cart.
        */
       addItem: async (item: OrderItem, quantity: number) => {
-        // const { items, shippingAddress } = get().cart
-        const { items } = get().cart
+        const { items, shippingAddress } = get().cart
 
         const existItem = items.find(
           (x) =>
@@ -80,7 +79,7 @@ const useCartStore = create(
             items: updatedCartItems,
             ...(await calcDeliveryDateAndPrice({
               items: updatedCartItems,
-              // shippingAddress,
+              shippingAddress,
             })),
           },
         })
@@ -104,7 +103,7 @@ const useCartStore = create(
        * @returns {Promise<void>}
        */
       updateItem: async (item: OrderItem, quantity: number) => {
-        const { items } = get().cart
+        const { items, shippingAddress } = get().cart
         const exist = items.find(
           (x) =>
             x.product === item.product &&
@@ -125,7 +124,7 @@ const useCartStore = create(
             items: updatedCartItems,
             ...(await calcDeliveryDateAndPrice({
               items: updatedCartItems,
-              // shippingAddress,
+              shippingAddress,
             })),
           },
         })
@@ -136,7 +135,7 @@ const useCartStore = create(
        * @returns {Promise<void>}
        */
       removeItem: async (item: OrderItem) => {
-        const { items } = get().cart
+        const { items, shippingAddress } = get().cart
         const updatedCartItems = items.filter(
           (x) =>
             x.product !== item.product ||
@@ -149,54 +148,73 @@ const useCartStore = create(
             items: updatedCartItems,
             ...(await calcDeliveryDateAndPrice({
               items: updatedCartItems,
-              // shippingAddress,
+              shippingAddress,
             })),
           },
         })
       },
-      // setShippingAddress: async (shippingAddress: ShippingAddress) => {
-      //   const { items } = get().cart
-      //   set({
-      //     cart: {
-      //       ...get().cart,
-      //       shippingAddress,
-      //       ...(await calcDeliveryDateAndPrice({
-      //         items,
-      //         shippingAddress,
-      //       })),
-      //     },
-      //   })
-      // },
-      // setPaymentMethod: (paymentMethod: string) => {
-      //   set({
-      //     cart: {
-      //       ...get().cart,
-      //       paymentMethod,
-      //     },
-      //   })
-      // },
-      // setDeliveryDateIndex: async (index: number) => {
-      //   const { items, shippingAddress } = get().cart
+      /**
+       * Sets the shipping address in the cart.
+       * @param {ShippingAddress} shippingAddress - The shipping address.
+       * @returns {Promise<void>}
+       */
+      setShippingAddress: async (shippingAddress: ShippingAddress) => {
+        const { items } = get().cart
+        set({
+          cart: {
+            ...get().cart,
+            shippingAddress,
+            ...(await calcDeliveryDateAndPrice({
+              items,
+              shippingAddress,
+            })),
+          },
+        })
+      },
+        /**
+         * Sets the payment method in the cart.
+         * @param {string} paymentMethod - The payment method.
+         * @returns {void}
+         */
+      setPaymentMethod: (paymentMethod: string) => {
+        set({
+          cart: {
+            ...get().cart,
+            paymentMethod,
+          },
+        })
+      },
+      /**
+       * Sets the delivery date index in the cart.
+       * @param {number} index - The index of the delivery date in the list of available delivery dates.
+       * @returns {Promise<void>}
+       */
+      setDeliveryDateIndex: async (index: number) => {
+        const { items, shippingAddress } = get().cart
 
-      //   set({
-      //     cart: {
-      //       ...get().cart,
-      //       ...(await calcDeliveryDateAndPrice({
-      //         items,
-      //         shippingAddress,
-      //         deliveryDateIndex: index,
-      //       })),
-      //     },
-      //   })
-      // },
-      // clearCart: () => {
-      //   set({
-      //     cart: {
-      //       ...get().cart,
-      //       items: [],
-      //     },
-      //   })
-      // },
+        set({
+          cart: {
+            ...get().cart,
+            ...(await calcDeliveryDateAndPrice({
+              items,
+              shippingAddress,
+              deliveryDateIndex: index,
+            })),
+          },
+        })
+      },
+      /**
+       * Clears the cart by setting the items array to an empty array.
+       * @returns {void}
+       */
+      clearCart: () => {
+        set({
+          cart: {
+            ...get().cart,
+            items: [],
+          },
+        })
+      },
       init: () => set({ cart: initialState }),
     }),
 
