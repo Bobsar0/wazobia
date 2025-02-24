@@ -6,7 +6,10 @@ import { AVAILABLE_DELIVERY_DATES } from "../constants"
 import { auth } from "@/auth";
 import { connectToDatabase } from "../db";
 import { OrderInputSchema } from "../validator";
-import Order from "../db/model/order.model";
+import Order, { IOrder } from "../db/model/order.model";
+import { paypal } from "../payments/paypal";
+import { sendPurchaseReceipt } from "@/emails";
+import { revalidatePath } from "next/cache";
 
 const taxPercent = 0.15;
 
@@ -63,6 +66,108 @@ export const createOrderFromCart = async (
     expectedDeliveryDate: cart.expectedDeliveryDate,
   })
   return await Order.create(order)
+}
+
+/**
+ * Retrieves an order by its ID.
+ *
+ * @param {string} orderId - The ID of the order to retrieve.
+ * @returns {Promise<IOrder>} The retrieved order.
+ */
+export async function getOrderById(orderId: string): Promise<IOrder> {
+  await connectToDatabase()
+  const order = await Order.findById(orderId)
+  return JSON.parse(JSON.stringify(order))
+}
+
+//Paypal
+
+/**
+ * Creates a PayPal order for the given order ID.
+ *
+ * @param {string} orderId - The ID of the order to create a PayPal order for.
+ * @returns {Promise<{ success: boolean, message: string, data?: string }>} The result of the operation.
+ * If the order is found and the PayPal order is created successfully, the result will have `success` set to `true`
+ * and `data` set to the ID of the created PayPal order. If the order is not found or an error occurs, the result will
+ * have `success` set to `false` and `message` set to an error message.
+ */
+export async function createPayPalOrder(orderId: string) {
+  await connectToDatabase()
+  try {
+    const order = await Order.findById(orderId)
+    if (order) {
+      const paypalOrder = await paypal.createOrder(order.totalPrice)
+      order.paymentResult = {
+        id: paypalOrder.id,
+        email_address: '',
+        status: '',
+        pricePaid: '0',
+      }
+      await order.save()
+      return {
+        success: true,
+        message: 'PayPal order created successfully',
+        data: paypalOrder.id,
+      }
+    } else {
+      throw new Error('Order not found')
+    }
+  } catch (err) {
+    return { success: false, message: formatError(err) }
+  }
+}
+
+
+/**
+ * Approves a PayPal order after creating order and redirecting user to paypal website for payment.
+ *
+ * Sends a confirmation email containing order receipt to the user if approval is successful
+ * 
+ * @param {string} orderId - The ID of the order to approve.
+ * @param {{ orderID: string }} data - The data from PayPal.
+ * @returns {Promise<{ success: boolean, message: string }>} The result of the operation.
+ * If the order is found and the payment is approved successfully, the result will have `success` set to `true`
+ * and `message` set to a success message. If the order is not found or an error occurs, the result will
+ * have `success` set to `false` and `message` set to an error message.
+ */
+export async function approvePayPalOrder(
+  orderId: string,
+  data: { orderID: string }
+) {
+  await connectToDatabase()
+  try {
+    const order = await Order.findById(orderId).populate('user', 'email')
+    if (!order) throw new Error('Order not found')
+
+    const captureData = await paypal.capturePayment(data.orderID)
+    if (
+      !captureData ||
+      captureData.id !== order.paymentResult?.id ||
+      captureData.status !== 'COMPLETED'
+    )
+      throw new Error('Error in paypal payment')
+
+    order.isPaid = true
+    order.paidAt = new Date()
+    order.paymentResult = {
+      id: captureData.id,
+      status: captureData.status,
+      email_address: captureData.payer.email_address,
+      pricePaid:
+        captureData.purchase_units[0]?.payments?.captures[0]?.amount?.value,
+    }
+    
+    await order.save()
+    await sendPurchaseReceipt({ order })
+    revalidatePath(`/account/orders/${orderId}`)
+
+    return {
+      success: true,
+      message: 'Your order has been successfully paid by PayPal',
+    }
+  } catch (err) {
+    return { success: false, message: formatError(err) }
+  }
 }
 
 /**
