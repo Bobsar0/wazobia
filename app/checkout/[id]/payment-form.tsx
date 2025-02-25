@@ -18,6 +18,9 @@ import { redirect, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import ProductPrice from '@/components/shared/product/product-price'
 import { IOrder } from '@/lib/db/model/order.model'
+import { loadStripe } from '@stripe/stripe-js'
+import { Elements } from '@stripe/react-stripe-js'
+import StripeForm from './stripe-form'
 
 
 // const stripePromise = loadStripe(
@@ -26,12 +29,12 @@ import { IOrder } from '@/lib/db/model/order.model'
 export default function OrderDetailsForm({
   order,
   paypalClientId,
-  // clientSecret,
+  stripeClientSecret,
 }: {
   order: IOrder
   paypalClientId: string
   isAdmin: boolean
-  // clientSecret: string | null
+  stripeClientSecret: string | null
 }) {
   const router = useRouter()
   const {
@@ -158,10 +161,10 @@ export default function OrderDetailsForm({
                 </PayPalScriptProvider>
               </div>
             )}
-            {/* {!isPaid && paymentMethod === 'Stripe' && clientSecret && (
+            {!isPaid && paymentMethod === 'Stripe' && stripeClientSecret && (
               <Elements
                 options={{
-                  clientSecret,
+                  clientSecret: stripeClientSecret,
                 }}
                 stripe={stripePromise}
               >
@@ -170,7 +173,7 @@ export default function OrderDetailsForm({
                   orderId={order._id}
                 />
               </Elements>
-            )} */}
+            )}
 
             {!isPaid && paymentMethod === 'Cash On Delivery' && (
               <Button
@@ -184,6 +187,10 @@ export default function OrderDetailsForm({
         </div>
       </CardContent>
     </Card>
+  )
+
+  const stripePromise = loadStripe(
+    process.env.STRIPE_PUBLISHABLE_KEY as string
   )
 
   return (

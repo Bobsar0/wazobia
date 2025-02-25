@@ -52,6 +52,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 - [MongoDB Adapter for Auth.js](https://www.npmjs.com/package/@auth/mongodb-adapter)
 - [@hookform/resolvers](https://www.npmjs.com/package/@hookform/resolvers)
 - npm i resend @react-email/components @paypal/react-paypal-js --legacy-peer-deps
+- npm i stripe @stripe/stripe-js @stripe/react-stripe-js --legacy-peer-deps
 
 
 ## Dev dependencies
