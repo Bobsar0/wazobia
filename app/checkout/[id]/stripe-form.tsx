@@ -1,5 +1,3 @@
-"use server"
-
 import {
   LinkAuthenticationElement,
   PaymentElement,
@@ -44,15 +42,14 @@ export default function StripeForm({
   const [errorMessage, setErrorMessage] = useState<string>()
   const [email, setEmail] = useState<string>()
 
-/**
- * Handles the payment form submission by preventing the default event,
- * checking for required Stripe elements, and initiating the payment confirmation
- * process. If successful, it redirects to a success page; otherwise, it displays
- * an error message based on the type of error encountered.
- *
- * @param {FormEvent} e - The form event triggered by the submission.
- */
-
+  /**
+   * Handles the payment form submission by preventing the default event,
+   * checking for required Stripe elements, and initiating the payment confirmation
+   * process. If successful, it redirects to a success page; otherwise, it displays
+   * an error message based on the type of error encountered.
+   *
+   * @param {FormEvent} e - The form event triggered by the submission.
+   */
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
 
