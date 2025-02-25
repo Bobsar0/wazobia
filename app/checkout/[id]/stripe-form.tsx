@@ -1,3 +1,5 @@
+"use server"
+
 import {
   LinkAuthenticationElement,
   PaymentElement,
@@ -78,7 +80,7 @@ export default function StripeForm({
     <form onSubmit={handleSubmit} className='space-y-4'>
       <div className='text-xl'>Stripe Checkout</div>
       {errorMessage && <div className='text-destructive'>{errorMessage}</div>}
-      <PaymentElement />
+      <PaymentElement id='payment-element'/>
       <div>
         <LinkAuthenticationElement onChange={(e) => setEmail(e.value.email)} />
       </div>
