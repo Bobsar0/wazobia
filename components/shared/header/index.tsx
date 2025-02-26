@@ -4,10 +4,25 @@ import Menu from './menu'
 import Search from './search'
 import data from '@/lib/data/data'
 import { APP_NAME } from '@/lib/constants'
-import { Button } from '@/components/ui/button'
-import { MenuIcon } from 'lucide-react'
+import Sidebar from './sidebar'
+import { getAllCategories } from '@/lib/actions/product.actions'
 
+/**
+ * The main header component for the app.
+ *
+ * This component renders the app's logo, search bar, navigation menu,
+ * and categories sidebar. It also renders a bottom bar with links
+ * to the app's main pages.
+ *
+ * The component is a Next.js `async` component, which allows it to
+ * fetch data from the API on the server-side and render the component
+ * with the fetched data on the client-side.
+ *
+ * @returns The header component.
+ */
 export default async function Header() {
+
+  const categories = await getAllCategories();
   return (
     <header className='bg-black  text-white'>
       <div className='px-2'>
@@ -37,13 +52,7 @@ export default async function Header() {
         </div>
       </div>
       <div className='flex items-center px-3 mb-[1px]  bg-gray-800'>
-        <Button
-          variant='ghost'
-          className='dark header-button flex items-center gap-1 text-base [&_svg]:size-6'
-        >
-          <MenuIcon />
-          All
-        </Button>
+        <Sidebar categories={categories} />
         <div className='flex items-center flex-wrap gap-3 overflow-hidden   max-h-[42px]'>
           {data.headerMenus.map((menu) => (
             <Link
