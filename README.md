@@ -55,6 +55,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 - npm i stripe @stripe/stripe-js @stripe/react-stripe-js --legacy-peer-deps
 - npm i react-intersection-observer --legacy-peer-deps
 - npm i query-string --legacy-peer-deps
+- npm i next-themes --legacy-peer-deps
 
 ## Dev dependencies
 - [@types/bcryptjs](https://www.npmjs.com/package/@types/bcryptjs)
