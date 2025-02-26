@@ -304,3 +304,63 @@ export const formatDateTime = (dateString: Date) => {
 export function formatId(id: string) {
   return `..${id.substring(id.length - 6)}`
 }
+
+/**
+ * Given an object with parameters and optional filter values, returns a URL string
+ * with the filter values added to the query string.
+ *
+ * The parameters object should have the following shape:
+ * - q?: string
+ * - category?: string
+ * - tag?: string
+ * - price?: string
+ * - rating?: string
+ * - sort?: string
+ * - page?: string
+ *
+ * The filter values are optional and will only be included in the query string
+ * if they are provided.
+ *
+ * @param {Object} params The parameters object.
+ * @param {string} [category] The category filter value.
+ * @param {string} [tag] The tag filter value.
+ * @param {string} [sort] The sort filter value.
+ * @param {string} [price] The price filter value.
+ * @param {string} [rating] The rating filter value.
+ * @param {string} [page] The page filter value.
+ * @returns {string} A URL string with the filter values added to the query string.
+ */
+export const getFilterUrl = ({
+  params,
+  category,
+  tag,
+  sort,
+  price,
+  rating,
+  page,
+}: {
+  params: {
+    q?: string
+    category?: string
+    tag?: string
+    price?: string
+    rating?: string
+    sort?: string
+    page?: string
+  }
+  tag?: string
+  category?: string
+  sort?: string
+  price?: string
+  rating?: string
+  page?: string
+}) => {
+  const newParams = { ...params }
+  if (category) newParams.category = category
+  if (tag) newParams.tag = toSlug(tag)
+  if (price) newParams.price = price
+  if (rating) newParams.rating = rating
+  if (page) newParams.page = page
+  if (sort) newParams.sort = sort
+  return `/search?${new URLSearchParams(newParams).toString()}`
+}

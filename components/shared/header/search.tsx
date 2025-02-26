@@ -10,10 +10,22 @@ import {
   SelectValue,
 } from '../../ui/select'
 import { APP_NAME } from '@/lib/constants'
+import { getAllCategories } from '@/lib/actions/product.actions'
 
 
+/**
+ * Renders a search form component with category selection and a search input.
+ * 
+ * The search form allows users to select a product category from a dropdown
+ * and enter a search query. It submits the search request to the '/search' endpoint
+ * using the GET method.
+ * 
+ * The function asynchronously fetches all available categories to populate the dropdown.
+ * 
+ * @returns A JSX element representing the search form.
+ */
 export default async function Search() {
-  const categories =['men', 'women', 'kids', 'accessories']
+  const categories = await getAllCategories();
 
   return (
     <form action='/search' method='GET' className='flex items-stretch h-10 '>

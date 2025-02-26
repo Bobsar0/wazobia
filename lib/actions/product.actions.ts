@@ -2,6 +2,7 @@
 
 import { connectToDatabase } from '@/lib/db'
 import Product, { IProduct } from '../db/model/product.model'
+import { PAGE_SIZE } from '../constants'
 
 
 /**
@@ -13,6 +14,143 @@ export async function getAllCategories() {
     'category'
   )
   return categories
+}
+
+/**
+ * Returns a list of products that match the given query, category, tag, price, and rating filters.
+ *
+ * The `query` parameter is a search query string that will be matched against the product name.
+ * The `category` parameter is the category of the product.
+ * The `tag` parameter is a tag of the product.
+ * The `price` parameter is the price of the product in the format of 'min-max'.
+ * The `rating` parameter is the average rating of the product.
+ * The `sort` parameter is the sorting order of the products.
+ *
+ * The function returns an object with the following properties:
+ * - `products`: an array of products that match the filters.
+ * - `totalPages`: the total number of pages of products that match the filters.
+ * - `totalProducts`: the total number of products that match the filters.
+ * - `from`: the number of the first product in the current page.
+ * - `to`: the number of the last product in the current page.
+ */
+export async function getAllProducts({
+  query,
+  limit,
+  page,
+  category,
+  tag,
+  price,
+  rating,
+  sort,
+}: {
+  query: string
+  category: string
+  tag: string
+  limit?: number
+  page: number
+  price?: string
+  rating?: string
+  sort?: string
+}) {
+  // const {
+  //   common: { pageSize },
+  // } = await getSetting()
+  limit = limit || PAGE_SIZE
+  await connectToDatabase()
+
+  const queryFilter =
+    query && query !== 'all'
+      ? {
+          name: {
+            $regex: query,
+            $options: 'i', //incase-sensitive
+          },
+        }
+      : {}
+  const categoryFilter = category && category !== 'all' ? { category } : {}
+  const tagFilter = tag && tag !== 'all' ? { tags: tag } : {}
+
+  const ratingFilter =
+    rating && rating !== 'all'
+      ? {
+          avgRating: {
+            $gte: Number(rating),
+          },
+        }
+      : {}
+  // 10-50
+  const priceFilter =
+    price && price !== 'all'
+      ? {
+          price: {
+            $gte: Number(price.split('-')[0]),
+            $lte: Number(price.split('-')[1]),
+          },
+        }
+      : {}
+  const order: Record<string, 1 | -1> =
+    sort === 'best-selling'
+      ? { numSales: -1 } //descending
+      : sort === 'price-low-to-high'
+        ? { price: 1 }
+        : sort === 'price-high-to-low'
+          ? { price: -1 }
+          : sort === 'avg-customer-review'
+            ? { avgRating: -1 }
+            : { _id: -1 }
+  const isPublished = { isPublished: true }
+  const products = await Product.find({
+    ...isPublished,
+    ...queryFilter,
+    ...tagFilter,
+    ...categoryFilter,
+    ...priceFilter,
+    ...ratingFilter,
+  })
+    .sort(order)
+    .skip(limit * (Number(page) - 1))
+    .limit(limit)
+    .lean()
+
+  const countProducts = await Product.countDocuments({
+    ...queryFilter,
+    ...tagFilter,
+    ...categoryFilter,
+    ...priceFilter,
+    ...ratingFilter,
+  })
+  return {
+    products: JSON.parse(JSON.stringify(products)) as IProduct[],
+    totalPages: Math.ceil(countProducts / limit),
+    totalProducts: countProducts,
+    from: limit * (Number(page) - 1) + 1,
+    to: limit * (Number(page) - 1) + products.length,
+  }
+}
+
+/**
+ * Returns an array of unique tags used in all products.
+ * The tags are sorted alphabetically and formatted
+ * as space-separated words with the first letter of
+ * each word capitalized.
+ * @returns {Promise<string[]>}
+ */
+export async function getAllTags() {
+  const tags = await Product.aggregate([
+    { $unwind: '$tags' },
+    { $group: { _id: null, uniqueTags: { $addToSet: '$tags' } } },
+    { $project: { _id: 0, uniqueTags: 1 } },
+  ])
+  return (
+    (tags[0]?.uniqueTags
+      .sort((a: string, b: string) => a.localeCompare(b))
+      .map((x: string) =>
+        x
+          .split('-')
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ')
+      ) as string[]) || []
+  )
 }
 
 /**
