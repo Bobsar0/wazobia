@@ -1,6 +1,6 @@
 'use server'
 
-import { Cart, OrderItem, ShippingAddress } from "@/types"
+import { Cart, IOrderList, OrderItem, ShippingAddress } from "@/types"
 import { formatError, round2 } from "../utils"
 import { AVAILABLE_DELIVERY_DATES, PAGE_SIZE } from "../constants"
 import { auth } from "@/auth";
@@ -10,6 +10,9 @@ import Order, { IOrder } from "../db/model/order.model";
 import { paypal } from "../payments/paypal";
 import { sendPurchaseReceipt } from "@/emails";
 import { revalidatePath } from "next/cache";
+import { DateRange } from "react-day-picker";
+import Product from "../db/model/product.model";
+import User from "../db/model/user.model";
 
 const taxPercent = 0.15;
 
@@ -225,7 +228,6 @@ export const calcDeliveryDateAndPrice = async ({
   }
 }
 
-/*************  ✨ Codeium Command ⭐  *************/
 /**
  * Retrieves the orders for the authenticated user, with pagination support.
  *
@@ -235,8 +237,6 @@ export const calcDeliveryDateAndPrice = async ({
  * @returns {Promise<{ data: IOrder[], totalPages: number }>} An object containing the user's orders and the total number of pages.
  * @throws {Error} Throws an error if the user is not authenticated.
  */
-
-/******  5b648e89-7c67-4257-815b-a470ecb37e8f  *******/
 export async function getMyOrders({
   limit,
   page,
@@ -266,4 +266,266 @@ export async function getMyOrders({
     data: JSON.parse(JSON.stringify(orders)),
     totalPages: Math.ceil(ordersCount / limit),
   }
+}
+
+/**
+ * Retrieves a summary of orders for the given date range.
+ *
+ * @param {DateRange} date - The date range object with from and to properties.
+ * @returns {Promise<{ ordersCount: number, productsCount: number, usersCount: number, totalSales: number, monthlySales: { label: string, value: number }[], salesChartData: { date: string, totalSales: number }[], topSalesCategories: { _id: string, totalSales: number }[], topSalesProducts: { _id: string, totalSales: number }[], latestOrders: IOrderList[] }>} An object containing the summary of orders.
+ */
+export async function getOrderSummary(date: DateRange) {
+  await connectToDatabase()
+
+  const ordersCount = await Order.countDocuments({
+    createdAt: {
+      $gte: date.from,
+      $lte: date.to,
+    },
+  })
+  const productsCount = await Product.countDocuments({
+    createdAt: {
+      $gte: date.from,
+      $lte: date.to,
+    },
+  })
+  const usersCount = await User.countDocuments({
+    createdAt: {
+      $gte: date.from,
+      $lte: date.to,
+    },
+  })
+
+  const totalSalesResult = await Order.aggregate([
+    {
+      $match: {
+        createdAt: {
+          $gte: date.from,
+          $lte: date.to,
+        },
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        sales: { $sum: '$totalPrice' },
+      },
+    },
+    { $project: { totalSales: { $ifNull: ['$sales', 0] } } },
+  ])
+  const totalSales = totalSalesResult[0] ? totalSalesResult[0].totalSales : 0
+
+  const today = new Date()
+  const sixMonthEarlierDate = new Date(
+    today.getFullYear(),
+    today.getMonth() - 5,
+    1
+  )
+  const monthlySales = await Order.aggregate([
+    {
+      $match: {
+        createdAt: {
+          $gte: sixMonthEarlierDate,
+        },
+      },
+    },
+    {
+      $group: {
+        _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } },
+        totalSales: { $sum: '$totalPrice' },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        label: '$_id',
+        value: '$totalSales',
+      },
+    },
+
+    { $sort: { label: -1 } },
+  ])
+  const topSalesCategories = await getTopSalesCategories(date)
+  const topSalesProducts = await getTopSalesProducts(date)
+
+  // const {
+  //   common: { pageSize },
+  // } = await getSetting()
+  const limit = PAGE_SIZE
+  const latestOrders = await Order.find()
+    .populate('user', 'name')
+    .sort({ createdAt: 'desc' })
+    .limit(limit)
+  return {
+    ordersCount,
+    productsCount,
+    usersCount,
+    totalSales,
+    monthlySales: JSON.parse(JSON.stringify(monthlySales)),
+    salesChartData: JSON.parse(JSON.stringify(await getSalesChartData(date))),
+    topSalesCategories: JSON.parse(JSON.stringify(topSalesCategories)),
+    topSalesProducts: JSON.parse(JSON.stringify(topSalesProducts)),
+    latestOrders: JSON.parse(JSON.stringify(latestOrders)) as IOrderList[],
+  }
+}
+
+/**
+ * Generates sales chart data over a specified date range.
+ *
+ * This function aggregates order data to calculate total sales for each day within the 
+ * provided date range. The results are formatted to show the date alongside the total 
+ * sales for that day.
+ *
+ * @param {DateRange} date - The date range for which to generate sales chart data.
+ * @returns {Promise<Array<{ date: string, totalSales: number }>>} A promise that resolves 
+ * to an array of objects, each containing a date string and the corresponding total sales.
+ */
+
+async function getSalesChartData(date: DateRange) {
+  const result = await Order.aggregate([
+    {
+      $match: {
+        createdAt: {
+          $gte: date.from,
+          $lte: date.to,
+        },
+      },
+    },
+    {
+      $group: {
+        _id: {
+          year: { $year: '$createdAt' },
+          month: { $month: '$createdAt' },
+          day: { $dayOfMonth: '$createdAt' },
+        },
+        totalSales: { $sum: '$totalPrice' },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        date: {
+          $concat: [
+            { $toString: '$_id.year' },
+            '/',
+            { $toString: '$_id.month' },
+            '/',
+            { $toString: '$_id.day' },
+          ],
+        },
+        totalSales: 1,
+      },
+    },
+    { $sort: { date: 1 } },
+  ])
+
+  return result
+}
+
+/**
+ * Retrieves the top 6 selling products within the given date range.
+ *
+ * The aggregation pipeline consists of the following steps:
+ * 1. Filter orders by the given date range.
+ * 2. Unwind the orderItems array.
+ * 3. Group the unwound orderItems by productId and calculate the total sales per product.
+ * 4. Sort the grouped products by total sales in descending order.
+ * 5. Limit the result to the top 6 products.
+ * 6. Replace the productInfo array with the product name and format the output.
+ * 7. Sort the result by product id in ascending order.
+ *
+ * @param {DateRange} date A date range object with from and to properties.
+ * @returns {Promise<{id: string, label: string, image: string, value: number}[]>} An array of top selling products, sorted by total sales in descending order.
+ */
+async function getTopSalesProducts(date: DateRange) {
+  const result = await Order.aggregate([
+    {
+      $match: {
+        createdAt: {
+          $gte: date.from,
+          $lte: date.to,
+        },
+      },
+    },
+    // Step 1: Unwind orderItems array
+    { $unwind: '$items' },
+
+    // Step 2: Group by productId to calculate total sales per product
+    {
+      $group: {
+        _id: {
+          name: '$items.name',
+          image: '$items.image',
+          _id: '$items.product',
+        },
+        totalSales: {
+          $sum: { $multiply: ['$items.quantity', '$items.price'] },
+        }, // Assume quantity field in orderItems represents units sold
+      },
+    },
+    {
+      $sort: {
+        totalSales: -1,
+      },
+    },
+    { $limit: 6 },
+
+    // Step 3: Replace productInfo array with product name and format the output
+    {
+      $project: {
+        _id: 0,
+        id: '$_id._id',
+        label: '$_id.name',
+        image: '$_id.image',
+        value: '$totalSales',
+      },
+    },
+
+    // Step 4: Sort by totalSales in descending order
+    { $sort: { _id: 1 } },
+  ])
+
+  return result
+}
+
+/**
+ * Retrieves the top N selling categories within the given date range.
+ *
+ * The aggregation pipeline consists of the following steps:
+ * 1. Filter orders by the given date range.
+ * 2. Unwind the orderItems array.
+ * 3. Group the unwound orderItems by category and calculate the total sales per category.
+ * 4. Sort the grouped categories by total sales in descending order.
+ * 5. Limit the result to the top N categories.
+ *
+ * @param {DateRange} date A date range object with from and to properties.
+ * @param {number} [limit=5] The number of top selling categories to retrieve.
+ * @returns {Promise<{ _id: string, totalSales: number }[]>} An array of top selling categories, sorted by total sales in descending order.
+ */
+async function getTopSalesCategories(date: DateRange, limit = 5) {
+  const result = await Order.aggregate([
+    {
+      $match: {
+        createdAt: {
+          $gte: date.from,
+          $lte: date.to,
+        },
+      },
+    },
+    // Step 1: Unwind orderItems array
+    { $unwind: '$items' },
+    // Step 2: Group by productId to calculate total sales per product
+    {
+      $group: {
+        _id: '$items.category',
+        totalSales: { $sum: '$items.quantity' }, // Assume quantity field in orderItems represents units sold
+      },
+    },
+    // Step 3: Sort by totalSales in descending order
+    { $sort: { totalSales: -1 } },
+    // Step 4: Limit to top N products
+    { $limit: limit },
+  ])
+
+  return result
 }
