@@ -1,11 +1,12 @@
 import { Data } from '@/types'
 import users from './users.data'
 import products from './products.data'
+import reviews from './reviews.data'
 
 const data: Data = {
   users,
   products,
-  reviews: [],
+  reviews,
   headerMenus: [
     {
       name: "Today's Deal",

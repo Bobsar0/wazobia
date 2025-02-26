@@ -11,7 +11,7 @@ export const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || "http://localhos
 export const SENDER_NAME = process.env.SENDER_NAME || 'support'
 export const SENDER_EMAIL = process.env.SENDER_EMAIL || 'onboarding@resend.dev'
 
-export const PAGE_SIZE = process.env.PAGE_SIZE || 9
+export const PAGE_SIZE = Number(process.env.PAGE_SIZE || '9')
 export const FREE_SHIPPING_MIN_PRICE = Number(process.env.FREE_SHIPPING_MIN_PRICE || 35)
 
 export const CURRENCY_CODE = 'USD'
