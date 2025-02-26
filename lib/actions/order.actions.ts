@@ -2,7 +2,7 @@
 
 import { Cart, OrderItem, ShippingAddress } from "@/types"
 import { formatError, round2 } from "../utils"
-import { AVAILABLE_DELIVERY_DATES } from "../constants"
+import { AVAILABLE_DELIVERY_DATES, PAGE_SIZE } from "../constants"
 import { auth } from "@/auth";
 import { connectToDatabase } from "../db";
 import { OrderInputSchema } from "../validator";
@@ -222,5 +222,48 @@ export const calcDeliveryDateAndPrice = async ({
     shippingPrice,
     taxPrice,
     totalPrice,
+  }
+}
+
+/*************  ✨ Codeium Command ⭐  *************/
+/**
+ * Retrieves the orders for the authenticated user, with pagination support.
+ *
+ * @param {Object} params - The parameters for the query.
+ * @param {number} [params.limit] - The maximum number of orders to return per page. Defaults to the common page size setting if not provided.
+ * @param {number} params.page - The page number for pagination.
+ * @returns {Promise<{ data: IOrder[], totalPages: number }>} An object containing the user's orders and the total number of pages.
+ * @throws {Error} Throws an error if the user is not authenticated.
+ */
+
+/******  5b648e89-7c67-4257-815b-a470ecb37e8f  *******/
+export async function getMyOrders({
+  limit,
+  page,
+}: {
+  limit?: number
+  page: number
+}) {
+  // const {
+  //   common: { pageSize },
+  // } = await getSetting()
+  limit = limit || PAGE_SIZE
+  await connectToDatabase()
+  const session = await auth()
+  if (!session) {
+    throw new Error('User is not authenticated')
+  }
+  const skipAmount = (Number(page) - 1) * limit
+  const orders = await Order.find({
+    user: session?.user?.id,
+  })
+    .sort({ createdAt: 'desc' })
+    .skip(skipAmount)
+    .limit(limit)
+  const ordersCount = await Order.countDocuments({ user: session?.user?.id })
+
+  return {
+    data: JSON.parse(JSON.stringify(orders)),
+    totalPages: Math.ceil(ordersCount / limit),
   }
 }

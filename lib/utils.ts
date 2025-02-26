@@ -1,5 +1,39 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { clsx, type ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+
+import qs from 'query-string'
+
+/**
+ * Updates a single query string parameter in a given URL and returns the resulting URL.
+ *
+ * @param {string} params - The query string to update.
+ * @param {string} key - The key to update in the query string.
+ * @param {string | null} value - The value to set for the given key.
+ *   If null, the key will be removed from the query string.
+ *
+ * @returns {string} The updated URL.
+ */
+export function formUrlQuery({
+  params,
+  key,
+  value,
+}: {
+  params: string
+  key: string
+  value: string | null
+}) {
+  const currentUrl = qs.parse(params)
+
+  currentUrl[key] = value
+
+  return qs.stringifyUrl(
+    {
+      url: window.location.pathname,
+      query: currentUrl,
+    },
+    { skipNull: true }
+  )
+}
 
 /**
  * Combines multiple class names into a single string using `clsx` and merges them with Tailwind's `twMerge`.
@@ -7,7 +41,6 @@ import { twMerge } from "tailwind-merge"
  * @param inputs - An array of class values that can be strings, objects, or arrays.
  * @returns A single string with merged class names.
  */
-
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -69,18 +102,18 @@ export const toSlug = (text: string): string =>
     .replace(/[^\w\s-]+/g, '')
     .replace(/\s+/g, '-')
     .replace(/^-+|-+$/g, '')
-    .replace(/-+/g, '-');
+    .replace(/-+/g, '-')
 
 /**
  * Rounds a number to two decimal places.
  *
- * This function uses a technique to mitigate floating-point precision 
+ * This function uses a technique to mitigate floating-point precision
  * issues by adding a small epsilon value before rounding.
  *
  * @param num - The number to round.
  * @returns The number rounded to two decimal places.
  */
-export const round2 = (num: number) => 
+export const round2 = (num: number) =>
   Math.round((num + Number.EPSILON) * 100) / 100
 
 /**
@@ -92,19 +125,19 @@ export const round2 = (num: number) =>
  * to generate IDs that are guaranteed unique, consider using a UUID library such as `uuid`.
  */
 export const generateId = () =>
-  Array.from({length: 24}, () => Math.floor(Math.random() * 10)).join('')
+  Array.from({ length: 24 }, () => Math.floor(Math.random() * 10)).join('')
 
 /**
  * Formats an error object into a human-readable string message.
  *
- * This function handles different types of errors such as ZodError, ValidationError, 
+ * This function handles different types of errors such as ZodError, ValidationError,
  * and MongoDB duplicate key errors, formatting them into a concise error message.
  *
  * - For ZodError, it extracts the path and message for each field error and joins them with a period.
  * - For ValidationError, it extracts the message for each field error and joins them with a period.
- * - For MongoDB duplicate key errors (error code 11000), it identifies the duplicate field and 
+ * - For MongoDB duplicate key errors (error code 11000), it identifies the duplicate field and
  *   returns a message indicating that the field already exists.
- * - For other errors, it returns the error message if it's a string, otherwise it stringifies the 
+ * - For other errors, it returns the error message if it's a string, otherwise it stringifies the
  *   message object.
  *
  * @param error - The error object to format.
