@@ -3,6 +3,8 @@
 import { connectToDatabase } from '@/lib/db'
 import Product, { IProduct } from '../db/model/product.model'
 import { PAGE_SIZE } from '../constants'
+import { revalidatePath } from 'next/cache'
+import { formatError } from '../utils'
 
 
 /**
@@ -263,5 +265,94 @@ export async function getRelatedProductsByCategory({
   return {
     data: JSON.parse(JSON.stringify(products)) as IProduct[],
     totalPages: Math.ceil(productsCount / limit),
+  }
+}
+
+/**
+ * Deletes a product by its ID.
+ * @param {string} id - The ID of the product to delete.
+ * @returns {Promise<{ success: boolean, message: string }>} A promise resolving to an object containing a success boolean and a message string.
+ * @throws {Error} If the product is not found.
+ */
+export async function deleteProduct(id: string) {
+  try {
+    await connectToDatabase()
+    const res = await Product.findByIdAndDelete(id)
+    if (!res) throw new Error('Product not found')
+    revalidatePath('/admin/products')
+
+    return {
+      success: true,
+      message: 'Product deleted successfully',
+    }
+  } catch (error) {
+    return { success: false, message: formatError(error) }
+  }
+}
+
+// GET ALL PRODUCTS FOR ADMIN
+
+/**
+ * Retrieves a paginated list of products for admin view based on a search query, sort order, and page number.
+ *
+ * @param {Object} param - The parameters for retrieving products.
+ * @param {string} param.query - A search query string to filter products by name.
+ * @param {number} [param.page=1] - The page number for pagination.
+ * @param {string} [param.sort='latest'] - The sort order for the products. Options include 'best-selling', 'price-low-to-high', 'price-high-to-low', 'avg-customer-review', and 'latest'.
+ * @param {number} [param.limit] - The maximum number of products to return per page.
+ * @returns {Promise<{ products: IProduct[], totalPages: number, totalProducts: number, from: number, to: number }>} An object containing the list of products, total pages, total number of products, and the range of products in the current page.
+ */
+
+export async function getAllProductsForAdmin({
+  query,
+  page = 1,
+  sort = 'latest',
+  limit,
+}: {
+  query: string
+  page?: number
+  sort?: string
+  limit?: number
+}) {
+  await connectToDatabase()
+
+  const pageSize = limit || PAGE_SIZE
+  const queryFilter =
+    query && query !== 'all'
+      ? {
+          name: {
+            $regex: query,
+            $options: 'i',
+          },
+        }
+      : {}
+
+  const order: Record<string, 1 | -1> =
+    sort === 'best-selling'
+      ? { numSales: -1 }
+      : sort === 'price-low-to-high'
+        ? { price: 1 }
+        : sort === 'price-high-to-low'
+          ? { price: -1 }
+          : sort === 'avg-customer-review'
+            ? { avgRating: -1 }
+            : { _id: -1 }
+  const products = await Product.find({
+    ...queryFilter,
+  })
+    .sort(order)
+    .skip(pageSize * (Number(page) - 1))
+    .limit(pageSize)
+    .lean()
+
+  const countProducts = await Product.countDocuments({
+    ...queryFilter,
+  })
+  return {
+    products: JSON.parse(JSON.stringify(products)) as IProduct[],
+    totalPages: Math.ceil(countProducts / pageSize),
+    totalProducts: countProducts,
+    from: pageSize * (Number(page) - 1) + 1,
+    to: pageSize * (Number(page) - 1) + products.length,
   }
 }
