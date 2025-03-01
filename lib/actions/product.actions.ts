@@ -6,6 +6,9 @@ import { PAGE_SIZE } from '../constants'
 import { revalidatePath } from 'next/cache'
 import { formatError } from '../utils'
 
+import { ProductInputSchema } from '../validator'
+import { IProductInput } from '@/types'
+import { z } from 'zod'
 
 /**
  * Returns an array of strings representing all the categories of products.
@@ -156,6 +159,18 @@ export async function getAllTags() {
 }
 
 /**
+ * Retrieves a single product by its ID.
+ *
+ * @param {string} productId - The ID of the product to retrieve.
+ * @returns {Promise<IProduct>} The product with the specified ID.
+ */
+export async function getProductById(productId: string) {
+  await connectToDatabase()
+  const product = await Product.findById(productId)
+  return JSON.parse(JSON.stringify(product)) as IProduct
+}
+
+/**
  * Retrieves a list of products for a given tag, limited by the number provided.
  * @param {Object} param
  * @param {string} param.tag - The tag to search products by.
@@ -302,7 +317,6 @@ export async function deleteProduct(id: string) {
  * @param {number} [param.limit] - The maximum number of products to return per page.
  * @returns {Promise<{ products: IProduct[], totalPages: number, totalProducts: number, from: number, to: number }>} An object containing the list of products, total pages, total number of products, and the range of products in the current page.
  */
-
 export async function getAllProductsForAdmin({
   query,
   page = 1,
@@ -354,5 +368,51 @@ export async function getAllProductsForAdmin({
     totalProducts: countProducts,
     from: pageSize * (Number(page) - 1) + 1,
     to: pageSize * (Number(page) - 1) + products.length,
+  }
+}
+
+/**
+ * Creates a new product in the database with the provided data.
+ *
+ * @param {IProductInput} data - The product data to create, which includes the product's name, slug, category, images, brand, description, price, listPrice, countInStock, tags, colors, sizes, avgRating, numReviews, and isPublished.
+ * @returns {Promise<{ success: boolean, message: string }>} An object containing a success boolean and a message indicating the result of the create operation.
+ * @throws {Error} If the provided data is invalid or if an error occurs during the create process.
+ */
+export async function createProduct(data: IProductInput) {
+  try {
+    const product = ProductInputSchema.parse(data)
+    await connectToDatabase()
+    await Product.create(product)
+    revalidatePath('/admin/products')
+    return {
+      success: true,
+      message: 'Product created successfully',
+    }
+  } catch (error) {
+    return { success: false, message: formatError(error) }
+  }
+}
+
+// UPDATE
+
+/**
+ * Updates an existing product in the database with the provided data.
+ *
+ * @param {z.infer<typeof ProductUpdateSchema>} data - The product data to update, which includes the product's ID and fields to be updated.
+ * @returns {Promise<{ success: boolean, message: string }>} An object containing a success boolean and a message indicating the result of the update operation.
+ * @throws {Error} If the provided data is invalid or if an error occurs during the update process.
+ */
+export async function updateProduct(data: z.infer<typeof ProductInputSchema>) {
+  try {
+    const product = ProductInputSchema.parse(data)
+    await connectToDatabase()
+    await Product.findByIdAndUpdate(product._id, product)
+    revalidatePath('/admin/products')
+    return {
+      success: true,
+      message: 'Product updated successfully',
+    }
+  } catch (error) {
+    return { success: false, message: formatError(error) }
   }
 }
