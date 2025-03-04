@@ -2,18 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
 import { sendPurchaseReceipt } from '@/emails'
-import Order from '@/lib/db/model/order.model'
+import Order from '@/lib/db/models/order.model'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string)
 
 /**
  * Handles Stripe webhook events.
- * 
+ *
  * The endpoint is called by Stripe after a user has successfully paid for an order.
- * 
+ *
  * If the event type is `charge.succeeded`, the endpoint updates the order to paid
  * and sends a purchase receipt email to the user.
- * 
+ *
  * @param {NextRequest} req - The request instance.
  */
 export async function POST(req: NextRequest) {

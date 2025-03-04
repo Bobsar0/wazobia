@@ -10,8 +10,8 @@ import { connectToDatabase } from '../db'
 import { formatError } from '../utils'
 import { ReviewInputSchema } from '../validator'
 import { IReviewDetails } from '@/types'
-import Review, { IReview } from '../db/model/review.model'
-import Product from '../db/model/product.model'
+import Review, { IReview } from '../db/models/review.model'
+import Product from '../db/models/product.model'
 import { PAGE_SIZE } from '../constants'
 
 /**
@@ -76,11 +76,11 @@ export async function createUpdateReview({
   }
 }
 
-  /**
-   * Updates the product fields with the latest review aggregation results.
-   * @param {string} productId - The ID of the product to update.
-   * @returns {Promise<void>}
-   */
+/**
+ * Updates the product fields with the latest review aggregation results.
+ * @param {string} productId - The ID of the product to update.
+ * @returns {Promise<void>}
+ */
 const updateProductReview = async (productId: string) => {
   // Calculate the new average rating, number of reviews, and rating distribution
   const result = await Review.aggregate([

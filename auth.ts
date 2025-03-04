@@ -7,7 +7,7 @@ import client from './lib/db/client'
 
 import NextAuth, { type DefaultSession } from 'next-auth'
 import authConfig from './auth.config'
-import User from './lib/db/model/user.model'
+import User from './lib/db/models/user.model'
 
 declare module 'next-auth' {
   interface Session {
@@ -41,7 +41,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         },
         password: { type: 'password' },
       },
-      
+
       /**
        * Check if the provided email and password combination is valid and return the matching user, or null if not found.
        * @param {object} credentials - contains email and password
@@ -72,7 +72,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-
     /**
      * Callback to update the JWT token. This is called whenever a user is authorized,
      * and is also used to update the token when the user data is updated in the session.
@@ -103,18 +102,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token
     },
 
-  /**
-   * 
-   * Callback to update the session object. This is called whenever a session is created
-   * or updated, and is also used to update the session when the user data is updated in the token.
-   * 
-   * @param {object} param0 - contains session, user, trigger, and token
-   * @param {object} param0.session - the session object to update
-   * @param {object} param0.user - the user object from the database
-   * @param {string} param0.trigger - whether the callback was triggered by an update
-   * @param {object} param0.token - the JWT token containing user information
-   * @returns {Promise<object>} - the updated session object
-   */
+    /**
+     *
+     * Callback to update the session object. This is called whenever a session is created
+     * or updated, and is also used to update the session when the user data is updated in the token.
+     *
+     * @param {object} param0 - contains session, user, trigger, and token
+     * @param {object} param0.session - the session object to update
+     * @param {object} param0.user - the user object from the database
+     * @param {string} param0.trigger - whether the callback was triggered by an update
+     * @param {object} param0.token - the JWT token containing user information
+     * @returns {Promise<object>} - the updated session object
+     */
     session: async ({ session, user, trigger, token }) => {
       session.user.id = token.sub as string
       session.user.role = token.role as string

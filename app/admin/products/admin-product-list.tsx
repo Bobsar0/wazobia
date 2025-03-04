@@ -21,7 +21,7 @@ import React, { useEffect, useState, useTransition } from 'react'
 import { Input } from '@/components/ui/input'
 import { formatDateTime, formatId } from '@/lib/utils'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { IProduct } from '@/lib/db/model/product.model'
+import { IProduct } from '@/lib/db/models/product.model'
 
 type ProductListDataProps = {
   products: IProduct[]
@@ -69,17 +69,16 @@ const AdminProductList = () => {
     })
   }
 
-
-/**
- * Handles changes to the search input field.
- *
- * This function updates the input value state and fetches product data
- * based on the current input value. It debounces the fetch request
- * to avoid excessive API calls as the user types. If the input is cleared,
- * it fetches products for the current page with an empty search query.
- *
- * @param {React.ChangeEvent<HTMLInputElement>} e - The input change event.
- */
+  /**
+   * Handles changes to the search input field.
+   *
+   * This function updates the input value state and fetches product data
+   * based on the current input value. It debounces the fetch request
+   * to avoid excessive API calls as the user types. If the input is cleared,
+   * it fetches products for the current page with an empty search query.
+   *
+   * @param {React.ChangeEvent<HTMLInputElement>} e - The input change event.
+   */
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     setInputValue(value)

@@ -1,20 +1,21 @@
 'use server'
 
-import { Cart, IOrderList, OrderItem, ShippingAddress } from "@/types"
-import { formatError, round2 } from "../utils"
-import { AVAILABLE_DELIVERY_DATES, PAGE_SIZE } from "../constants"
-import { auth } from "@/auth";
-import { connectToDatabase } from "../db";
-import { OrderInputSchema } from "../validator";
-import Order, { IOrder } from "../db/model/order.model";
-import { paypal } from "../payments/paypal";
-import { sendPurchaseReceipt } from "@/emails";
-import { revalidatePath } from "next/cache";
-import { DateRange } from "react-day-picker";
-import Product from "../db/model/product.model";
-import User from "../db/model/user.model";
+import { Cart, IOrderList, OrderItem, ShippingAddress } from '@/types'
+import { formatError, round2 } from '../utils'
+import { AVAILABLE_DELIVERY_DATES, PAGE_SIZE } from '../constants'
+import { auth } from '@/auth'
+import { connectToDatabase } from '../db'
+import { OrderInputSchema } from '../validator'
+import Order, { IOrder } from '../db/models/order.model'
+import { paypal } from '../payments/paypal'
+import { sendAskReviewOrderItems, sendPurchaseReceipt } from '@/emails'
+import { revalidatePath } from 'next/cache'
+import { DateRange } from 'react-day-picker'
+import Product from '../db/models/product.model'
+import User from '../db/models/user.model'
+import mongoose from 'mongoose'
 
-const taxPercent = 0.15;
+const taxPercent = 0.15
 
 // CREATE
 export const createOrder = async (clientSideCart: Cart) => {
@@ -120,12 +121,11 @@ export async function createPayPalOrder(orderId: string) {
   }
 }
 
-
 /**
  * Approves a PayPal order after creating order and redirecting user to paypal website for payment.
  *
  * Sends a confirmation email containing order receipt to the user if approval is successful
- * 
+ *
  * @param {string} orderId - The ID of the order to approve.
  * @param {{ orderID: string }} data - The data from PayPal.
  * @returns {Promise<{ success: boolean, message: string }>} The result of the operation.
@@ -159,7 +159,7 @@ export async function approvePayPalOrder(
       pricePaid:
         captureData.purchase_units[0]?.payments?.captures[0]?.amount?.value,
     }
-    
+
     await order.save()
     await sendPurchaseReceipt({ order })
     revalidatePath(`/account/orders/${orderId}`)
@@ -208,7 +208,9 @@ export const calcDeliveryDateAndPrice = async ({
         ? 0
         : deliveryDate.shippingPrice
 
-  const taxPrice = !shippingAddress ? undefined : round2(itemsPrice * taxPercent)
+  const taxPrice = !shippingAddress
+    ? undefined
+    : round2(itemsPrice * taxPercent)
 
   const totalPrice = round2(
     itemsPrice +
@@ -372,12 +374,12 @@ export async function getOrderSummary(date: DateRange) {
 /**
  * Generates sales chart data over a specified date range.
  *
- * This function aggregates order data to calculate total sales for each day within the 
- * provided date range. The results are formatted to show the date alongside the total 
+ * This function aggregates order data to calculate total sales for each day within the
+ * provided date range. The results are formatted to show the date alongside the total
  * sales for that day.
  *
  * @param {DateRange} date - The date range for which to generate sales chart data.
- * @returns {Promise<Array<{ date: string, totalSales: number }>>} A promise that resolves 
+ * @returns {Promise<Array<{ date: string, totalSales: number }>>} A promise that resolves
  * to an array of objects, each containing a date string and the corresponding total sales.
  */
 
@@ -532,7 +534,7 @@ async function getTopSalesCategories(date: DateRange, limit = 5) {
 
 /**
  * Deletes an order by its ID.
- * 
+ *
  * @param {string} id - The ID of the order to delete.
  * @returns {Promise<{ success: boolean, message: string }>} A promise resolving to an object containing a success boolean and a message string.
  * @throws {Error} If the order is not found.
@@ -579,5 +581,111 @@ export async function getAllOrders({
   return {
     data: JSON.parse(JSON.stringify(orders)) as IOrderList[],
     totalPages: Math.ceil(ordersCount / limit),
+  }
+}
+
+/**
+ * Updates an order to paid status.
+ *
+ * @param {string} orderId - The ID of the order to update.
+ * @returns {Promise<{ success: boolean, message: string }>} A promise resolving to an object containing a success boolean and a message string.
+ * If the order is found, not already paid, and the update is successful, the result will have `success` set to `true`
+ * and `message` set to a success message. If the order is not found, already paid, or an error occurs, the result will
+ * have `success` set to `false` and `message` set to an error message.
+ */
+export async function updateOrderToPaid(orderId: string) {
+  try {
+    await connectToDatabase()
+    const order = await Order.findById(orderId).populate<{
+      user: { email: string; name: string }
+    }>('user', 'name email')
+
+    if (!order) throw new Error('Order not found')
+    if (order.isPaid) throw new Error('Order is already paid')
+
+    order.isPaid = true
+    order.paidAt = new Date()
+    await order.save()
+
+    if (!process.env.MONGODB_URI?.startsWith('mongodb://localhost'))
+      await updateProductStock(order._id)
+    if (order.user.email) await sendPurchaseReceipt({ order })
+      
+    revalidatePath(`/account/orders/${orderId}`)
+
+    return { success: true, message: 'Order paid successfully' }
+  } catch (err) {
+    return { success: false, message: formatError(err) }
+  }
+}
+
+/**
+ * Updates the countInStock of each product in the given order.
+ *
+ * @param {string} orderId - The ID of the order to update.
+ * @returns {Promise<boolean>} A promise resolving to a boolean indicating if the update was successful.
+ * @throws {Error} If an error occurs during the update process.
+ * @private
+ */
+const updateProductStock = async (orderId: string) => {
+  const session = await mongoose.connection.startSession()
+
+  try {
+    session.startTransaction()
+    const opts = { session }
+
+    const order = await Order.findOneAndUpdate(
+      { _id: orderId },
+      { isPaid: true, paidAt: new Date() },
+      opts
+    )
+    if (!order) throw new Error('Order not found')
+
+    for (const item of order.items) {
+      const product = await Product.findById(item.product).session(session)
+      if (!product) throw new Error('Product not found')
+
+      product.countInStock -= item.quantity
+      await Product.updateOne(
+        { _id: product._id },
+        { countInStock: product.countInStock },
+        opts
+      )
+    }
+    await session.commitTransaction()
+    session.endSession()
+    return true
+  } catch (error) {
+    await session.abortTransaction()
+    session.endSession()
+    throw error
+  }
+}
+
+/**
+ * Marks an order as delivered.
+ *
+ * @param {string} orderId - The ID of the order to mark as delivered.
+ * @returns {Promise<{ success: boolean, message: string }>} A promise resolving to an object containing a success boolean and a message string.
+ * If the order is found, paid, and the delivery is successful, the result will have `success` set to `true`
+ * and `message` set to a success message. If the order is not found, not paid, or an error occurs, the result will
+ * have `success` set to `false` and `message` set to an error message.
+ */
+export async function deliverOrder(orderId: string) {
+  try {
+    await connectToDatabase()
+    const order = await Order.findById(orderId).populate<{
+      user: { email: string; name: string }
+    }>('user', 'name email')
+    if (!order) throw new Error('Order not found')
+    if (!order.isPaid) throw new Error('Order is not paid')
+    order.isDelivered = true
+    order.deliveredAt = new Date()
+    await order.save()
+    if (order.user.email) await sendAskReviewOrderItems({ order })
+    revalidatePath(`/account/orders/${orderId}`)
+    return { success: true, message: 'Order delivered successfully' }
+  } catch (err) {
+    return { success: false, message: formatError(err) }
   }
 }

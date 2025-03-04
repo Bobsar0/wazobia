@@ -13,17 +13,28 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-// import { IOrder } from '@/lib/db/models/order.model'
 import { cn, formatDateTime } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
 import ProductPrice from '../product/product-price'
-import { IOrder } from '@/lib/db/model/order.model'
-// import ActionButton from '../action-button'
-// import { deliverOrder, updateOrderToPaid } from '@/lib/actions/order.actions'
+import { IOrder } from '@/lib/db/models/order.model'
+import ActionButton from '../action-button'
+import { deliverOrder, updateOrderToPaid } from '@/lib/actions/order.actions'
 
+/**
+ * Displays the details of an order.
+ *
+ * @param {IOrder} order - The order details.
+ * @param {boolean} isAdmin - Whether the user is an admin or not.
+ *
+ * @returns {JSX.Element} The order details component.
+ *
+ * The component displays the shipping address, payment method, order items, order summary, and
+ * a link to pay the order if it is not paid and the payment method is Stripe or PayPal.
+ * If the user is an admin, it also displays buttons to mark the order as paid or delivered.
+ */
 export default function OrderDetailsForm({
   order,
-  // isAdmin,
+  isAdmin,
 }: {
   order: IOrder
   isAdmin: boolean
@@ -166,7 +177,7 @@ export default function OrderDetailsForm({
               </Link>
             )}
 
-            {/* {isAdmin && !isPaid && paymentMethod === 'Cash On Delivery' && (
+            {isAdmin && !isPaid && paymentMethod === 'Cash On Delivery' && (
               <ActionButton
                 caption='Mark as paid'
                 action={() => updateOrderToPaid(order._id)}
@@ -177,7 +188,7 @@ export default function OrderDetailsForm({
                 caption='Mark as delivered'
                 action={() => deliverOrder(order._id)}
               />
-            )} */}
+            )}
           </CardContent>
         </Card>
       </div>

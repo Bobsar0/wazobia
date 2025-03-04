@@ -24,19 +24,8 @@ import { ProductInputSchema } from '@/lib/validator'
 import { Checkbox } from '@/components/ui/checkbox'
 import { toSlug } from '@/lib/utils'
 import { IProductInput } from '@/types'
-import { IProduct } from '@/lib/db/model/product.model'
+import { IProduct } from '@/lib/db/models/product.model'
 import { Trash } from 'lucide-react'
-
-// import { Input } from '@/components/ui/input'
-// import { Textarea } from '@/components/ui/textarea'
-// import { useToast } from '@/hooks/use-toast'
-// import { createProduct, updateProduct } from '@/lib/actions/product.actions'
-// import { IProduct } from '@/lib/db/models/product.model'
-// import { UploadButton } from '@/lib/uploadthing'
-// import { ProductInputSchema, ProductUpdateSchema } from '@/lib/validator'
-// import { Checkbox } from '@/components/ui/checkbox'
-// import { toSlug } from '@/lib/utils'
-// import { IProductInput } from '@/types'
 
 const productDefaultValues: IProductInput =
   process.env.NODE_ENV === 'development'
@@ -104,15 +93,15 @@ const ProductForm = ({
 
   const form = useForm<IProductInput>({
     resolver: zodResolver(ProductInputSchema),
-      // type === 'Update'
-      //   ? zodResolver(ProductUpdateSchema)
-      //   : zodResolver(ProductInputSchema),
+    // type === 'Update'
+    //   ? zodResolver(ProductUpdateSchema)
+    //   : zodResolver(ProductInputSchema),
     defaultValues:
       product && type === 'Update' ? product : productDefaultValues,
   })
 
   const { toast } = useToast()
-  
+
   /**
    * Submits the product to the server.
    *
@@ -324,7 +313,7 @@ const ProductForm = ({
                           </Button>
                         </Card>
                       ))}
-                      
+
                       <FormControl>
                         <UploadButton
                           endpoint='imageUploader'

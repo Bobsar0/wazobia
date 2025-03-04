@@ -8,14 +8,13 @@ import {
   getAllProducts,
   getAllTags,
 } from '@/lib/actions/product.actions'
-// import { IProduct } from '@/lib/db/models/product.model'
 import ProductSortSelector from '@/components/shared/product/product-sort-selector'
 import { getFilterUrl, toSlug } from '@/lib/utils'
 import Rating from '@/components/shared/product/rating'
 
 import CollapsibleOnMobile from '@/components/shared/collapsible-on-mobile'
 import { CURRENCY_SYMBOL } from '@/lib/constants'
-import { IProduct } from '@/lib/db/model/product.model'
+import { IProduct } from '@/lib/db/models/product.model'
 
 const sortOrders = [
   { value: 'price-low-to-high', name: 'Price: Low to high' },
@@ -119,7 +118,7 @@ export async function generateMetadata(props: {
  * This component fetches categories, tags, and products based on search
  * criteria, renders a list of products, and provides options for sorting and
  * filtering the results. If no products match the search criteria, a message
- * is displayed. 
+ * is displayed.
  */
 export default async function SearchPage(props: {
   searchParams: Promise<{
@@ -163,12 +162,10 @@ export default async function SearchPage(props: {
       <div className='my-2 bg-card md:border-b  flex-between flex-col md:flex-row '>
         <div className='flex items-center'>
           {data.totalProducts === 0
-            // ? t('Search.No')
-            ? 'No'
-            // : `${data.from}-${data.to} ${t('Search.of')} ${
-            : `${data.from}-${data.to} of ${
-                data.totalProducts
-              }`}{' '}
+            ? // ? t('Search.No')
+              'No'
+            : // : `${data.from}-${data.to} ${t('Search.of')} ${
+              `${data.from}-${data.to} of ${data.totalProducts}`}{' '}
           {/* {t('Search.results')} */}
           results
           {(q !== 'all' && q !== '') ||
@@ -176,8 +173,8 @@ export default async function SearchPage(props: {
           (tag !== 'all' && tag !== '') ||
           rating !== 'all' ||
           price !== 'all'
-            // ? ` ${t('Search.for')} `
-            ? ' for '
+            ? // ? ` ${t('Search.for')} `
+              ' for '
             : null}
           {q !== 'all' && q !== '' && '"' + q + '"'}
           {category !== 'all' &&
@@ -188,12 +185,9 @@ export default async function SearchPage(props: {
           {price !== 'all' && `    ${t('Search.Price')}: ` + price}
           {rating !== 'all' &&
             `    ${t('Search.Rating')}: ` + rating + ` & ${t('Search.up')}`} */}
-          
           {tag !== 'all' && tag !== '' && `   Tag: ` + tag}
           {price !== 'all' && `    Price: ` + price}
-          {rating !== 'all' &&
-            `    Rating: ` + rating + ` & up`}
-
+          {rating !== 'all' && `    Rating: ` + rating + ` & up`}
           &nbsp;
           {(q !== 'all' && q !== '') ||
           (category !== 'all' && category !== '') ||

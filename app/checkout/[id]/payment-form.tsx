@@ -17,11 +17,10 @@ import CheckoutFooter from '../checkout-footer'
 import { redirect, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import ProductPrice from '@/components/shared/product/product-price'
-import { IOrder } from '@/lib/db/model/order.model'
+import { IOrder } from '@/lib/db/models/order.model'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements } from '@stripe/react-stripe-js'
 import StripeForm from './stripe-form'
-
 
 export default function OrderDetailsForm({
   order,
@@ -50,7 +49,7 @@ export default function OrderDetailsForm({
   if (isPaid) {
     redirect(`/account/orders/${order._id}`)
   }
-  
+
   /**
    * Displays a message indicating if the PayPal script is loading or if there is an error.
    *
@@ -65,7 +64,6 @@ export default function OrderDetailsForm({
       status = 'Error in loading PayPal.'
     }
     return status
-    
   }
   /**
    * Creates a PayPal order for the given order ID.
@@ -81,14 +79,14 @@ export default function OrderDetailsForm({
       })
     return res.data
   }
-  
-/**
- * Approves a PayPal order and displays a toast message indicating the result.
- *
- * @param {Object} data - The data containing the PayPal order ID.
- * @param {string} data.orderID - The ID of the PayPal order to approve.
- * @returns {Promise<void>} A promise that resolves when the operation is complete.
- */
+
+  /**
+   * Approves a PayPal order and displays a toast message indicating the result.
+   *
+   * @param {Object} data - The data containing the PayPal order ID.
+   * @param {string} data.orderID - The ID of the PayPal order to approve.
+   * @returns {Promise<void>} A promise that resolves when the operation is complete.
+   */
 
   const handleApprovePayPalOrder = async (data: { orderID: string }) => {
     const res = await approvePayPalOrder(order._id, data)

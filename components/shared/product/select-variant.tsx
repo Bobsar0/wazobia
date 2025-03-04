@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button'
-import { IProduct } from '@/lib/db/model/product.model'
+import { IProduct } from '@/lib/db/models/product.model'
 import Link from 'next/link'
 
 export default function SelectVariant({
@@ -55,7 +55,9 @@ export default function SelectVariant({
               asChild
               variant='outline'
               className={
-                selectedSize === size ? 'border-2  border-primary' : 'border-2  '
+                selectedSize === size
+                  ? 'border-2  border-primary'
+                  : 'border-2  '
               }
               key={size}
             >

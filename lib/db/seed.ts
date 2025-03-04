@@ -4,13 +4,18 @@ import { connectToDatabase } from '.'
 
 import { cwd } from 'process'
 import { loadEnvConfig } from '@next/env'
-import Product from './model/product.model'
-import User from './model/user.model'
-import Review from './model/review.model'
+import Product from './models/product.model'
+import User from './models/user.model'
+import Review from './models/review.model'
 import reviews from '../data/reviews.data'
-import Order from './model/order.model'
+import Order from './models/order.model'
 import { IOrderInput, OrderItem, ShippingAddress } from '@/types'
-import { generateId, calculatePastDate, calculateFutureDate, round2 } from '../utils'
+import {
+  generateId,
+  calculatePastDate,
+  calculateFutureDate,
+  round2,
+} from '../utils'
 import { AVAILABLE_DELIVERY_DATES } from '../constants'
 
 loadEnvConfig(cwd())
@@ -61,7 +66,7 @@ const main = async () => {
         )
       )
     }
-    
+
     console.log({
       createdUsers,
       createdProducts,
@@ -75,13 +80,13 @@ const main = async () => {
   }
 }
 
-  /**
-   * Generates an order with a given index, array of user IDs and array of product IDs.
-   * @param {number} i - The index of the order.
-   * @param {any} users - An array of user IDs.
-   * @param {any} products - An array of product IDs.
-   * @returns {Promise<IOrderInput>} The generated order.
-   */
+/**
+ * Generates an order with a given index, array of user IDs and array of product IDs.
+ * @param {number} i - The index of the order.
+ * @param {any} users - An array of user IDs.
+ * @param {any} products - An array of product IDs.
+ * @returns {Promise<IOrderInput>} The generated order.
+ */
 const generateOrder = async (
   i: number,
   users: any,

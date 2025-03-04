@@ -7,7 +7,7 @@ import { redirect } from 'next/navigation'
 import { connectToDatabase } from '../db'
 import { formatError } from '../utils'
 import { UserSignUpSchema } from '../validator'
-import User from '../db/model/user.model'
+import User from '../db/models/user.model'
 
 /**
  * Signs in a user with the provided credentials.
@@ -27,7 +27,6 @@ export async function signInWithCredentials(user: IUserSignIn) {
 export const SignInWithGoogle = async () => {
   await signIn('google')
 }
-
 
 /**
  * Signs out the current user and redirects to the page specified
@@ -122,7 +121,6 @@ export async function updateUserName(user: IUserName) {
     return { success: false, message: formatError(error) }
   }
 }
-
 
 // // GET
 // export async function getAllUsers({

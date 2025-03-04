@@ -14,7 +14,7 @@ import { getMyOrders } from '@/lib/actions/order.actions'
 import { formatDateTime, formatId } from '@/lib/utils'
 import BrowsingHistoryList from '@/components/shared/browsing-history-list'
 import ProductPrice from '@/components/shared/product/product-price'
-import { IOrder } from '@/lib/db/model/order.model'
+import { IOrder } from '@/lib/db/models/order.model'
 
 const PAGE_TITLE = 'Your Orders'
 export const metadata: Metadata = {

@@ -46,8 +46,12 @@ import { ReviewInputSchema } from '@/lib/validator'
 import RatingSummary from '@/components/shared/product/rating-summary'
 import { Separator } from '@/components/ui/separator'
 import { IReviewDetails } from '@/types'
-import { IProduct } from '@/lib/db/model/product.model'
-import { createUpdateReview, getReviewByProductId, getReviews } from '@/lib/actions/review.action'
+import { IProduct } from '@/lib/db/models/product.model'
+import {
+  createUpdateReview,
+  getReviewByProductId,
+  getReviews,
+} from '@/lib/actions/review.action'
 
 const reviewFormDefaultValues = {
   title: '',
@@ -79,7 +83,7 @@ export default function ReviewList({
   const [totalPages, setTotalPages] = useState(0)
   const [reviews, setReviews] = useState<IReviewDetails[]>([])
   const { ref, inView } = useInView({ triggerOnce: true })
-  
+
   /**
    * Reloads the reviews from the server.
    *
@@ -144,7 +148,7 @@ export default function ReviewList({
   })
   const [open, setOpen] = useState(false)
   const { toast } = useToast()
-  
+
   /**
    * Submits the review to the server.
    *
@@ -240,10 +244,7 @@ export default function ReviewList({
                               <FormItem className='w-full'>
                                 <FormLabel>Title</FormLabel>
                                 <FormControl>
-                                  <Input
-                                    placeholder='Enter title'
-                                    {...field}
-                                  />
+                                  <Input placeholder='Enter title' {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -280,9 +281,7 @@ export default function ReviewList({
                                 >
                                   <FormControl>
                                     <SelectTrigger>
-                                      <SelectValue
-                                        placeholder='Select a rating'
-                                      />
+                                      <SelectValue placeholder='Select a rating' />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
@@ -316,11 +315,10 @@ export default function ReviewList({
                           disabled={form.formState.isSubmitting}
                         >
                           {form.formState.isSubmitting
-                            // ? t('Submitting...')
-                            // : t('Submit')}
-                            ? 'Submitting...'
-                            : 'Submit'
-                          }
+                            ? // ? t('Submitting...')
+                              // : t('Submit')}
+                              'Submitting...'
+                            : 'Submit'}
                         </Button>
                       </DialogFooter>
                     </form>
@@ -330,7 +328,7 @@ export default function ReviewList({
             ) : (
               <div>
                 {/* {t('Please')}{' '} */}
-                Please {' '}
+                Please{' '}
                 <Link
                   href={`/sign-in?callbackUrl=/product/${product.slug}`}
                   className='highlight-link'
@@ -351,7 +349,7 @@ export default function ReviewList({
                 <div className='flex-between'>
                   <CardTitle>{review.title}</CardTitle>
                   <div className='italic text-sm flex'>
-                    <Check className='h-4 w-4' /> 
+                    <Check className='h-4 w-4' />
                     {/* {t('Verified Purchase')} */}
                     Verified Purchase
                   </div>
