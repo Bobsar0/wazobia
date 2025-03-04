@@ -17,6 +17,8 @@ export const FREE_SHIPPING_MIN_PRICE = Number(process.env.FREE_SHIPPING_MIN_PRIC
 export const CURRENCY_CODE = 'USD'
 export const CURRENCY_SYMBOL = '$'
 
+export const USER_ROLES = ['Admin', 'User']
+
 export const AVAILABLE_PAYMENT_METHODS = [
   {
     name: 'PayPal',

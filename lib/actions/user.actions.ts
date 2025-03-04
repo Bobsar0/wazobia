@@ -6,10 +6,11 @@ import bcrypt from 'bcryptjs'
 import { redirect } from 'next/navigation'
 import { connectToDatabase } from '../db'
 import { formatError } from '../utils'
-import { UserSignUpSchema } from '../validator'
+import { UserSignUpSchema, UserUpdateSchema } from '../validator'
 import User, { IUser } from '../db/models/user.model'
 import { revalidatePath } from 'next/cache'
 import { PAGE_SIZE } from '../constants'
+import { z } from 'zod'
 
 /**
  * Signs in a user with the provided credentials.
@@ -82,27 +83,32 @@ export async function deleteUser(id: string) {
   }
 }
 
-// UPDATE
-
-// export async function updateUser(user: z.infer<typeof UserUpdateSchema>) {
-//   try {
-//     await connectToDatabase()
-//     const dbUser = await User.findById(user._id)
-//     if (!dbUser) throw new Error('User not found')
-//     dbUser.name = user.name
-//     dbUser.email = user.email
-//     dbUser.role = user.role
-//     const updatedUser = await dbUser.save()
-//     revalidatePath('/admin/users')
-//     return {
-//       success: true,
-//       message: 'User updated successfully',
-//       data: JSON.parse(JSON.stringify(updatedUser)),
-//     }
-//   } catch (error) {
-//     return { success: false, message: formatError(error) }
-//   }
-// }
+/**
+ * Updates a user by its ID.
+ *
+ * @param {z.infer<typeof UserUpdateSchema>} user - The user object to update, containing the user's ID and fields to be updated.
+ * @returns {Promise<{ success: boolean, message: string, data?: IUser }>} A promise resolving to an object containing a success boolean, a message string, and the updated user object if the update is successful.
+ * @throws {Error} If the user is not found.
+ */
+export async function updateUser(user: z.infer<typeof UserUpdateSchema>) {
+  try {
+    await connectToDatabase()
+    const dbUser = await User.findById(user._id)
+    if (!dbUser) throw new Error('User not found')
+    dbUser.name = user.name
+    dbUser.email = user.email
+    dbUser.role = user.role
+    const updatedUser = await dbUser.save()
+    revalidatePath('/admin/users')
+    return {
+      success: true,
+      message: 'User updated successfully',
+      data: JSON.parse(JSON.stringify(updatedUser)),
+    }
+  } catch (error) {
+    return { success: false, message: formatError(error) }
+  }
+}
 
 /**
  * Updates the current user's name.
@@ -162,9 +168,16 @@ export async function getAllUsers({
   }
 }
 
-// export async function getUserById(userId: string) {
-//   await connectToDatabase()
-//   const user = await User.findById(userId)
-//   if (!user) throw new Error('User not found')
-//   return JSON.parse(JSON.stringify(user)) as IUser
-// }
+/**
+ * Retrieves a user by their ID.
+ *
+ * @param {string} userId - The ID of the user to retrieve.
+ * @returns {Promise<IUser>} A promise that resolves to the user object.
+ * @throws {Error} If the user is not found.
+ */
+export async function getUserById(userId: string) {
+  await connectToDatabase()
+  const user = await User.findById(userId)
+  if (!user) throw new Error('User not found')
+  return JSON.parse(JSON.stringify(user)) as IUser
+}
