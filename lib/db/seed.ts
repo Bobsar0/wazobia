@@ -7,7 +7,6 @@ import { loadEnvConfig } from '@next/env'
 import Product from './models/product.model'
 import User from './models/user.model'
 import Review from './models/review.model'
-import reviews from '../data/reviews.data'
 import Order from './models/order.model'
 import { IOrderInput, OrderItem, ShippingAddress } from '@/types'
 import {
@@ -17,20 +16,35 @@ import {
   round2,
 } from '../utils'
 import { AVAILABLE_DELIVERY_DATES } from '../constants'
+import WebPage from './models/web-page.model'
 
 loadEnvConfig(cwd())
 
+/**
+ * Seeds the database with sample data.
+ *
+ * The data includes:
+ * - 5 users
+ * - 5 products with sample data
+ * - 10 reviews for each product, with a mix of verified and unverified purchases
+ * - 200 orders, each with a random user and product
+ *
+ * The seed data is just a sample and you should replace it with your own data.
+ */
 const main = async () => {
   try {
-    const { products, users } = data
+    const { products, users, reviews, webPages } = data
     await connectToDatabase(process.env.MONGODB_URI)
 
+    //Users
     await User.deleteMany()
     const createdUsers = await User.insertMany(users)
 
+    //Products
     await Product.deleteMany()
     const createdProducts = await Product.insertMany(products)
 
+    //Reviews
     await Review.deleteMany()
     // create sample review for all products
     const rws = []
@@ -55,6 +69,7 @@ const main = async () => {
     }
     const createdReviews = await Review.insertMany(rws)
 
+    //Orders
     await Order.deleteMany()
     const orders = []
     for (let i = 0; i < 200; i++) {
@@ -66,6 +81,10 @@ const main = async () => {
         )
       )
     }
+
+    //WebPages
+    await WebPage.deleteMany()
+    await WebPage.insertMany(webPages)
 
     console.log({
       createdUsers,
