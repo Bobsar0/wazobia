@@ -7,7 +7,9 @@ import { redirect } from 'next/navigation'
 import { connectToDatabase } from '../db'
 import { formatError } from '../utils'
 import { UserSignUpSchema } from '../validator'
-import User from '../db/models/user.model'
+import User, { IUser } from '../db/models/user.model'
+import { revalidatePath } from 'next/cache'
+import { PAGE_SIZE } from '../constants'
 
 /**
  * Signs in a user with the provided credentials.
@@ -59,22 +61,27 @@ export async function registerUser(userSignUp: IUserSignUp) {
   }
 }
 
-// // DELETE
+/**
+ * Deletes a user by its ID.
+ * @param {string} id - The ID of the user to delete.
+ * @returns {Promise<{ success: boolean, message: string }>} A promise resolving to an object containing a success boolean and a message string.
+ * @throws {Error} If the user is not found.
+ */
+export async function deleteUser(id: string) {
+  try {
+    await connectToDatabase()
+    const res = await User.findByIdAndDelete(id)
+    if (!res) throw new Error('Use not found')
+    revalidatePath('/admin/users')
+    return {
+      success: true,
+      message: 'User deleted successfully',
+    }
+  } catch (error) {
+    return { success: false, message: formatError(error) }
+  }
+}
 
-// export async function deleteUser(id: string) {
-//   try {
-//     await connectToDatabase()
-//     const res = await User.findByIdAndDelete(id)
-//     if (!res) throw new Error('Use not found')
-//     revalidatePath('/admin/users')
-//     return {
-//       success: true,
-//       message: 'User deleted successfully',
-//     }
-//   } catch (error) {
-//     return { success: false, message: formatError(error) }
-//   }
-// }
 // UPDATE
 
 // export async function updateUser(user: z.infer<typeof UserUpdateSchema>) {
@@ -122,31 +129,38 @@ export async function updateUserName(user: IUserName) {
   }
 }
 
-// // GET
-// export async function getAllUsers({
-//   limit,
-//   page,
-// }: {
-//   limit?: number
-//   page: number
-// }) {
-//   const {
-//     common: { pageSize },
-//   } = await getSetting()
-//   limit = limit || pageSize
-//   await connectToDatabase()
+/**
+ * Retrieves a paginated list of all users.
+ *
+ * @param {{ limit?: number, page: number }} param - The parameters for retrieving users.
+ * @param {number} [param.limit] - The maximum number of users to return per page. Defaults to the common page size setting if not provided.
+ * @param {number} param.page - The page number for pagination.
+ * @returns {Promise<{ data: IUser[], totalPages: number }>} An object containing the list of users and the total number of pages.
+ */
+export async function getAllUsers({
+  limit,
+  page,
+}: {
+  limit?: number
+  page: number
+}) {
+  // const {
+  //   common: { pageSize },
+  // } = await getSetting()
+  limit = limit || PAGE_SIZE
+  await connectToDatabase()
 
-//   const skipAmount = (Number(page) - 1) * limit
-//   const users = await User.find()
-//     .sort({ createdAt: 'desc' })
-//     .skip(skipAmount)
-//     .limit(limit)
-//   const usersCount = await User.countDocuments()
-//   return {
-//     data: JSON.parse(JSON.stringify(users)) as IUser[],
-//     totalPages: Math.ceil(usersCount / limit),
-//   }
-// }
+  const skipAmount = (Number(page) - 1) * limit
+  const users = await User.find()
+    .sort({ createdAt: 'desc' })
+    .skip(skipAmount)
+    .limit(limit)
+  const usersCount = await User.countDocuments()
+  return {
+    data: JSON.parse(JSON.stringify(users)) as IUser[],
+    totalPages: Math.ceil(usersCount / limit),
+  }
+}
 
 // export async function getUserById(userId: string) {
 //   await connectToDatabase()
