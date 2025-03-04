@@ -5,6 +5,8 @@ import { revalidatePath } from 'next/cache'
 import { connectToDatabase } from '@/lib/db'
 import WebPage, { IWebPage } from '@/lib/db/models/web-page.model'
 import { formatError } from '@/lib/utils'
+import { WebPageInputSchema, WebPageUpdateSchema } from '../validator'
+import { z } from 'zod'
 
 /**
  * Retrieves all web pages from the database.
@@ -48,12 +50,57 @@ export async function deleteWebPage(id: string) {
     await connectToDatabase()
     const res = await WebPage.findByIdAndDelete(id)
     if (!res) throw new Error('WebPage not found')
-      
+
     revalidatePath('/admin/web-pages')
 
     return {
       success: true,
       message: 'WebPage deleted successfully',
+    }
+  } catch (error) {
+    return { success: false, message: formatError(error) }
+  }
+}
+
+/**
+ * Creates a new web page in the database with the provided data.
+ *
+ * @param {z.infer<typeof WebPageInputSchema>} data - The web page data to create, which includes the web page's title, slug, content, and isPublished.
+ * @returns {Promise<{ success: boolean, message: string }>} A promise resolving to an object containing a success boolean and a message string.
+ * @throws {Error} If the provided data is invalid or if an error occurs during the create process.
+ */
+export async function createWebPage(data: z.infer<typeof WebPageInputSchema>) {
+  try {
+    const webPage = WebPageInputSchema.parse(data)
+    await connectToDatabase()
+    await WebPage.create(webPage)
+    revalidatePath('/admin/web-pages')
+    
+    return {
+      success: true,
+      message: 'WebPage created successfully',
+    }
+  } catch (error) {
+    return { success: false, message: formatError(error) }
+  }
+}
+
+/**
+ * Updates an existing web page in the database with the provided data.
+ *
+ * @param {z.infer<typeof WebPageUpdateSchema>} data - The web page data to update, which includes the web page's title, slug, content, isPublished, and _id.
+ * @returns {Promise<{ success: boolean, message: string }>} A promise resolving to an object containing a success boolean and a message string.
+ * @throws {Error} If the provided data is invalid or if an error occurs during the update process.
+ */
+export async function updateWebPage(data: z.infer<typeof WebPageUpdateSchema>) {
+  try {
+    const webPage = WebPageUpdateSchema.parse(data)
+    await connectToDatabase()
+    await WebPage.findByIdAndUpdate(webPage._id, webPage)
+    revalidatePath('/admin/web-pages')
+    return {
+      success: true,
+      message: 'WebPage updated successfully',
     }
   } catch (error) {
     return { success: false, message: formatError(error) }
