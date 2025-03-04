@@ -529,3 +529,55 @@ async function getTopSalesCategories(date: DateRange, limit = 5) {
 
   return result
 }
+
+/**
+ * Deletes an order by its ID.
+ * 
+ * @param {string} id - The ID of the order to delete.
+ * @returns {Promise<{ success: boolean, message: string }>} A promise resolving to an object containing a success boolean and a message string.
+ * @throws {Error} If the order is not found.
+ */
+export async function deleteOrder(id: string) {
+  try {
+    await connectToDatabase()
+    const res = await Order.findByIdAndDelete(id)
+    if (!res) throw new Error('Order not found')
+    revalidatePath('/admin/orders')
+    return {
+      success: true,
+      message: 'Order deleted successfully',
+    }
+  } catch (error) {
+    return { success: false, message: formatError(error) }
+  }
+}
+
+/**
+ * Retrieves a paginated list of all orders.
+ *
+ * @param {Object} param - The parameters for retrieving orders.
+ * @param {number} [param.limit] - The maximum number of orders to return per page. Defaults to the common page size setting if not provided.
+ * @param {number} param.page - The page number for pagination.
+ * @returns {Promise<{ data: IOrderList[], totalPages: number }>} An object containing the list of orders and the total number of pages.
+ */
+export async function getAllOrders({
+  limit,
+  page,
+}: {
+  limit?: number
+  page: number
+}) {
+  limit = limit || PAGE_SIZE
+  await connectToDatabase()
+  const skipAmount = (Number(page) - 1) * limit
+  const orders = await Order.find()
+    .populate('user', 'name')
+    .sort({ createdAt: 'desc' })
+    .skip(skipAmount)
+    .limit(limit)
+  const ordersCount = await Order.countDocuments()
+  return {
+    data: JSON.parse(JSON.stringify(orders)) as IOrderList[],
+    totalPages: Math.ceil(ordersCount / limit),
+  }
+}

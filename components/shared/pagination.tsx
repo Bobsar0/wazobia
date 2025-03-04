@@ -50,7 +50,7 @@ const Pagination = ({ page, totalPages, urlParamName }: PaginationProps) => {
         disabled={Number(page) <= 1}
         className='w-24'
       >
-        <ChevronLeft /> Search.Previous
+        <ChevronLeft /> Previous
       </Button>
       Page {page} of {totalPages}
       <Button
