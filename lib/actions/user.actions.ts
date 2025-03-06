@@ -9,8 +9,8 @@ import { formatError } from '../utils'
 import { UserSignUpSchema, UserUpdateSchema } from '../validator'
 import User, { IUser } from '../db/models/user.model'
 import { revalidatePath } from 'next/cache'
-import { PAGE_SIZE } from '../constants'
 import { z } from 'zod'
+import { getSetting } from './setting.actions'
 
 /**
  * Signs in a user with the provided credentials.
@@ -150,10 +150,10 @@ export async function getAllUsers({
   limit?: number
   page: number
 }) {
-  // const {
-  //   common: { pageSize },
-  // } = await getSetting()
-  limit = limit || PAGE_SIZE
+  const {
+    common: { pageSize },
+  } = await getSetting()
+  limit = limit || pageSize
   await connectToDatabase()
 
   const skipAmount = (Number(page) - 1) * limit

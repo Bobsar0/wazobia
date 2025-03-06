@@ -3,6 +3,7 @@ import users from './users.data'
 import products from './products.data'
 import reviews from './reviews.data'
 import webPages from './web-pages.data'
+import settings from './settings.data'
 
 const data: Data = {
   users,
@@ -65,7 +66,8 @@ const data: Data = {
       isPublished: true,
     },
   ],
-  webPages
+  webPages,
+  settings
 }
 
 export default data

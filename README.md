@@ -59,6 +59,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 - npm i recharts --legacy-peer-deps
 - npm i react-markdown --legacy-peer-deps
 - npm i react-markdown-editor-lite --legacy-peer-deps
+- npm i next-intl --legacy-peer-deps
 
 ## Dev dependencies
 - [@types/bcryptjs](https://www.npmjs.com/package/@types/bcryptjs)

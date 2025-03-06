@@ -16,8 +16,8 @@ import {
 } from '@react-email/components'
 
 import { formatCurrency } from '@/lib/utils'
-import { SERVER_URL } from '@/lib/constants'
 import { IOrder } from '@/lib/db/models/order.model'
+import { getSetting } from '@/lib/actions/setting.actions'
 
 type OrderInformationProps = {
   order: IOrder
@@ -58,7 +58,7 @@ AskReviewOrderItemsEmail.PreviewProps = {
         countInStock: 10,
       },
     ],
-    paymentMethod: 'PayPal',
+    paymentMethod: 'Stripe',
     expectedDeliveryDate: new Date(),
     isDelivered: true,
   } as IOrder,
@@ -66,15 +66,20 @@ AskReviewOrderItemsEmail.PreviewProps = {
 const dateFormatter = new Intl.DateTimeFormat('en', { dateStyle: 'medium' })
 
 /**
- * Sends an email to the user containing the order receipt and asking them to review their products.
+ * Renders an email component for asking the user to review the items in their order.
  *
- * @param {{ order: IOrder }} param
- * @param {IOrder} param.order The order to send the confirmation for.
- * @returns {Promise<void>} A promise resolved when the email is sent.
+ * @param {Object} props - The component properties.
+ * @param {IOrder} props.order - The order containing items to review.
+ *
+ * @returns {JSX.Element} The rendered email component.
+ *
+ * This email includes an order summary with details such as order ID, purchase date,
+ * and total price. It also lists each item in the order with a link to review the product.
  */
 export default async function AskReviewOrderItemsEmail({
   order,
 }: OrderInformationProps) {
+  const { site } = await getSetting()
   return (
     <Html>
       <Preview>Review Order Items</Preview>
@@ -113,21 +118,21 @@ export default async function AskReviewOrderItemsEmail({
               {order.items.map((item) => (
                 <Row key={item.product} className='mt-8'>
                   <Column className='w-20'>
-                    <Link href={`${SERVER_URL}/product/${item.slug}`}>
+                    <Link href={`${site.url}/product/${item.slug}`}>
                       <Img
                         width='80'
                         alt={item.name}
                         className='rounded'
                         src={
                           item.image.startsWith('/')
-                            ? `${SERVER_URL}${item.image}`
+                            ? `${site.url}${item.image}`
                             : item.image
                         }
                       />
                     </Link>
                   </Column>
                   <Column className='align-top'>
-                    <Link href={`${SERVER_URL}/product/${item.slug}`}>
+                    <Link href={`${site.url}/product/${item.slug}`}>
                       <Text className='mx-2 my-0'>
                         {item.name} x {item.quantity}
                       </Text>
@@ -135,7 +140,7 @@ export default async function AskReviewOrderItemsEmail({
                   </Column>
                   <Column align='right' className='align-top '>
                     <Button
-                      href={`${SERVER_URL}/product/${item.slug}#reviews`}
+                      href={`${site.url}/product/${item.slug}#reviews`}
                       className='text-center bg-blue-500 hover:bg-blue-700 text-white   py-2 px-4 rounded'
                     >
                       Review this product

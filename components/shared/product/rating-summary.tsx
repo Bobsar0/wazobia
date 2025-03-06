@@ -10,6 +10,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
+import { useTranslations } from 'next-intl'
 import { ChevronDownIcon } from 'lucide-react'
 
 type RatingSummaryProps = {
@@ -22,21 +23,40 @@ type RatingSummaryProps = {
   }[]
 }
 
+/**
+ * A component that displays a summary of a product's ratings.
+ *
+ * It displays the average rating, the number of reviews, and a distribution of
+ * the ratings. If `asPopover` is true, the component will render a popover with
+ * the rating distribution. Otherwise, it will render the rating distribution
+ * directly.
+ *
+ * @example
+ * <RatingSummary avgRating={4.5} numReviews={10} ratingDistribution={[{ rating: 5, count: 7 }, { rating: 4, count: 2 }, { rating: 3, count: 1 }]} />
+ *
+ * @param {Object} props - The component props.
+ * @param {boolean} [props.asPopover=false] - Flag to determine if the component should render a popover.
+ * @param {number} [props.avgRating=0] - The average rating of the product.
+ * @param {number} [props.numReviews=0] - The number of reviews of the product.
+ * @param {Array<{ rating: number, count: number }>} [props.ratingDistribution=[]] - The distribution of the ratings.
+ *
+ * @returns {JSX.Element}
+ */
 export default function RatingSummary({
   asPopover,
   avgRating = 0,
   numReviews = 0,
   ratingDistribution = [],
 }: RatingSummaryProps) {
-  // const t = useTranslations()
+  const t = useTranslations()
   
   /**
-   * @function RatingDistribution
-   * @description A component that displays a product's rating distribution.
-   * @param {number} avgRating - The average rating of the product.
-   * @param {number} numReviews - The number of reviews for the product.
-   * @param {Array<{ rating: number, count: number }>} ratingDistribution - The rating distribution data.
-   * @returns {JSX.Element} The rating distribution component.
+   * Renders a distribution of ratings.
+   *
+   * The component renders a list of ratings, with the percentage of reviews
+   * for each rating. The ratings are sorted in descending order.
+   *
+   * @returns {JSX.Element}
    */
   const RatingDistribution = () => {
     const ratingPercentageDistribution = ratingDistribution.map((x) => ({
@@ -49,15 +69,13 @@ export default function RatingSummary({
         <div className='flex flex-wrap items-center gap-1 cursor-help'>
           <Rating rating={avgRating} />
           <span className='text-lg font-semibold'>
-            {/* {t('Product.avgRating out of 5', {
+            {t('Product.avgRating out of 5', {
               avgRating: avgRating.toFixed(1),
-            })} */}
-            {avgRating.toFixed(1)} out of 5
+            })}
           </span>
         </div>
         <div className='text-lg '>
-          {/* {t('Product.numReviews ratings', { numReviews })} */}
-          {numReviews} ratings
+          {t('Product.numReviews ratings', { numReviews })}
         </div>
 
         <div className='space-y-3'>
@@ -69,9 +87,8 @@ export default function RatingSummary({
                 className='grid grid-cols-[50px_1fr_30px] gap-2 items-center'
               >
                 <div className='text-sm'>
-                  {/* {' '}
-                  {t('Product.rating star', { rating })} */}
-                  {rating} star
+                  {' '}
+                  {t('Product.rating star', { rating })}
                 </div>
                 <Progress value={percentage} className='h-4' />
                 <div className='text-sm text-right'>{percentage}%</div>
@@ -98,16 +115,14 @@ export default function RatingSummary({
             <Separator />
 
             <Link className='highlight-link text-center' href='#reviews'>
-              {/* {t('Product.See customer reviews')} */}
-              See customer reviews
+              {t('Product.See customer reviews')}
             </Link>
           </div>
         </PopoverContent>
       </Popover>
       <div className=' '>
         <Link href='#reviews' className='highlight-link'>
-          {/* {t('Product.numReviews ratings', { numReviews })} */}
-          {numReviews} ratings
+          {t('Product.numReviews ratings', { numReviews })}
         </Link>
       </div>
     </div>

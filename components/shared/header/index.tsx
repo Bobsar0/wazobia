@@ -3,9 +3,10 @@ import Link from 'next/link'
 import Menu from './menu'
 import Search from './search'
 import data from '@/lib/data/data'
-import { APP_NAME } from '@/lib/constants'
 import Sidebar from './sidebar'
 import { getAllCategories } from '@/lib/actions/product.actions'
+import { getSetting } from '@/lib/actions/setting.actions'
+import { getTranslations } from 'next-intl/server'
 
 /**
  * The main header component for the app.
@@ -21,8 +22,10 @@ import { getAllCategories } from '@/lib/actions/product.actions'
  * @returns The header component.
  */
 export default async function Header() {
+  const { site } = await getSetting()
+  const t = await getTranslations()
 
-  const categories = await getAllCategories();
+  const categories = await getAllCategories()
   return (
     <header className='bg-black  text-white'>
       <div className='px-2'>
@@ -36,9 +39,9 @@ export default async function Header() {
                 src='/icons/logo.svg'
                 width={40}
                 height={40}
-                alt={`${APP_NAME} logo`}
+                alt={`${site.name} logo`}
               />
-              {APP_NAME}
+              {site.name}
             </Link>
           </div>
 
@@ -60,7 +63,7 @@ export default async function Header() {
               key={menu.href}
               className='header-button !p-2 '
             >
-              {menu.name}
+              {t('Header.' + menu.name)}
             </Link>
           ))}
         </div>

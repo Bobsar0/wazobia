@@ -12,7 +12,7 @@ import { ReviewInputSchema } from '../validator'
 import { IReviewDetails } from '@/types'
 import Review, { IReview } from '../db/models/review.model'
 import Product from '../db/models/product.model'
-import { PAGE_SIZE } from '../constants'
+import { getSetting } from './setting.actions'
 
 /**
  * Creates or updates a review.
@@ -124,10 +124,10 @@ export async function getReviews({
   limit?: number
   page: number
 }) {
-  // const {
-  //   common: { pageSize },
-  // } = await getSetting()
-  const pageSize = PAGE_SIZE
+  const {
+    common: { pageSize },
+  } = await getSetting()
+
   limit = limit || pageSize
   await connectToDatabase()
   const skipAmount = (page - 1) * limit

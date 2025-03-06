@@ -2,38 +2,40 @@
 
 import { ShoppingCartIcon } from 'lucide-react'
 import Link from 'next/link'
-import { cn } from '@/lib/utils'
-import useCartStore from '@/hooks/use-cart-store'
 import useIsMounted from '@/hooks/use-is-mounted'
 import useCartSidebar from '@/hooks/use-cart-sidebar'
+import { cn } from '@/lib/utils'
+import useCartStore from '@/hooks/use-cart-store'
+import { useLocale, useTranslations } from 'next-intl'
+import { getDirection } from '@/i18n-config'
+
 
 /**
- * A button that displays the cart items count and links to the cart page.
+ * A button component that displays a cart icon, the number of items in the cart
+ * and a dropdown cart sidebar.
  *
- * If the cart items count is greater than or equal to 10, it will be displayed
- * in a smaller font size and without padding.
+ * The component renders a button with a cart icon and the number of items in the cart.
+ * The cart items count is rendered as a badge on top of the cart icon.
+ * If there are items in the cart, the component also renders a dropdown cart sidebar
+ * below the button.
  *
- * The `useIsMounted` hook is used to avoid displaying the cart items count on
- * the server side and avoid hydration error.
+ * The component uses the `useCartStore` hook to get the items from the cart,
+ * the `useShowSidebar` hook to determine if the sidebar should be shown,
+ * and the `useLocale` hook to get the current locale.
  *
- * The `useCartStore` hook is used to get the cart items.
- *
- * The styles for this component are defined in the `header-button` and `cart-button` classes in the
- * `components/ui/button.css` file.
- *
- * @returns A JSX element that renders a button with the cart items count.
+ * @returns {JSX.Element} The cart button component.
  */
 export default function CartButton() {
   const isMounted = useIsMounted()
   const {
     cart: { items },
   } = useCartStore()
-  const cartItemsCount = items.reduce((a, c) => a + c.quantity, 0)
-  const isCartSidebarOpen = useCartSidebar()
-  // const showSidebar = useShowSidebar()
-  // const t = useTranslations()
 
-  // const locale = useLocale()
+  const cartItemsCount = items.reduce((a, c) => a + c.quantity, 0)
+  const showSidebar = useCartSidebar()
+  const t = useTranslations()
+  const locale = useLocale()
+
   return (
     <Link href='/cart' className='px-1 header-button'>
       <div className='flex items-end text-xs relative'>
@@ -42,21 +44,18 @@ export default function CartButton() {
         {isMounted && (
           <span
             className={cn(
-              `bg-black px-1 rounded-full text-primary text-base font-bold absolute right-[30px] top-[-4px] z-10`,
+              `bg-black  px-1 rounded-full text-primary text-base font-bold absolute ${
+                getDirection(locale) === 'rtl' ? 'right-[5px]' : 'left-[10px]'
+              } top-[-4px] z-10`,
               cartItemsCount >= 10 && 'text-sm px-0 p-[1px]'
             )}
           >
             {cartItemsCount}
           </span>
         )}
-        <span className='font-bold'>Cart</span>
-        {isCartSidebarOpen && (
-          <div
-            className={`absolute top-[20px] right-[-16px] rotate-[-90deg] z-10 w-0 h-0 border-l-[7px] border-r-[7px] border-b-[8px] border-transparent border-b-background`}
-          ></div>
-        )}
+        <span className='font-bold'>{t('Header.Cart')}</span>
 
-        {/* {showSidebar && (
+        {showSidebar && (
           <div
             className={`absolute top-[20px] ${
               getDirection(locale) === 'rtl'
@@ -64,7 +63,7 @@ export default function CartButton() {
                 : 'right-[-16px] rotate-[-90deg]'
             }  z-10   w-0 h-0 border-l-[7px] border-r-[7px] border-b-[8px] border-transparent border-b-background`}
           ></div>
-        )} */}
+        )}
       </div>
     </Link>
   )

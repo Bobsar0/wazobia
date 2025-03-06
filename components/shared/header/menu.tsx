@@ -10,6 +10,8 @@ import {
 import CartButton from './cart-button'
 import UserButton from './user-button'
 import ThemeSwitcher from './theme-switcher'
+import { useTranslations } from 'next-intl'
+import LanguageSwitcher from './language-switcher'
 
 
 /**
@@ -19,15 +21,17 @@ import ThemeSwitcher from './theme-switcher'
  * @returns The menu
  */
 const Menu = ({ forAdmin = false }: { forAdmin?: boolean }) => {
-  // const t = useTranslations()
+  const t = useTranslations()
+  
   return (
     <div className='flex justify-end'>
       <nav className='md:flex gap-3 hidden w-full'>
-        {/* <LanguageSwitcher /> */}
+        <LanguageSwitcher />
         <ThemeSwitcher />
         <UserButton />
         {forAdmin ? null : <CartButton />}
       </nav>
+
       <nav className='md:hidden'>
         <Sheet>
           <SheetTrigger className='align-middle header-button'>
@@ -36,12 +40,11 @@ const Menu = ({ forAdmin = false }: { forAdmin?: boolean }) => {
           <SheetContent className='bg-black text-white  flex flex-col items-start  '>
             <SheetHeader className='w-full'>
               <div className='flex items-center justify-between '>
-                {/* <SheetTitle className='  '>{t('Header.Site Menu')}</SheetTitle> */}
-                <SheetTitle className='  '>Menu</SheetTitle>
+                <SheetTitle className='  '>{t('Header.Site Menu')}</SheetTitle>
                 <SheetDescription></SheetDescription>
               </div>
             </SheetHeader>
-            {/* <LanguageSwitcher /> */}
+            <LanguageSwitcher />
             <ThemeSwitcher />
             <UserButton />
             <CartButton />

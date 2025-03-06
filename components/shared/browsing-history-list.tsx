@@ -4,6 +4,7 @@ import React, { useEffect } from 'react'
 import ProductSlider from './product/product-slider'
 import { Separator } from '../ui/separator'
 import { cn } from '@/lib/utils'
+import { useTranslations } from 'next-intl'
 
 /**
  * A component that displays a user's browsing history.
@@ -21,18 +22,19 @@ export default function BrowsingHistoryList({
   className?: string
 }) {
   const { products } = useBrowsingHistory()
-  // const t = useTranslations('Home')
+  const t = useTranslations('Home')
+
   return (
     products.length !== 0 && (
       <div className='bg-background'>
         <Separator className={cn('mb-4', className)} />
         <ProductList
-          title={"Related to items that you've viewed"}
+          title={t("Related to items that you've viewed")}
           type='related'
         />
         <Separator className='mb-4' />
         <ProductList
-          title={'Your browsing history'}
+          title={t('Your browsing history')}
           hideDetails
           type='history'
         />
@@ -69,6 +71,14 @@ function ProductList({
   const { products } = useBrowsingHistory()
   const [data, setData] = React.useState([])
   useEffect(() => {
+    
+  /**
+   * Fetches a list of products from the server based on the user's browsing history.
+   *
+   * The function will fetch a list of products that the user has viewed in the past, and
+   * will exclude the product with the id given in the `excludeId` parameter. The
+   * response from the server will be stored in the component's state.
+   */
     const fetchProducts = async () => {
       const res = await fetch(
         `/api/products/browsing-history?type=${type}&excludeId=${excludeId}&categories=${products

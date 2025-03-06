@@ -9,6 +9,7 @@ import { formatError } from '../utils'
 import { ProductInputSchema } from '../validator'
 import { IProductInput } from '@/types'
 import { z } from 'zod'
+import { getSetting } from './setting.actions'
 
 /**
  * Returns an array of strings representing all the categories of products.
@@ -57,10 +58,11 @@ export async function getAllProducts({
   rating?: string
   sort?: string
 }) {
-  // const {
-  //   common: { pageSize },
-  // } = await getSetting()
-  limit = limit || PAGE_SIZE
+  const {
+    common: { pageSize },
+  } = await getSetting()
+
+  limit = limit || pageSize
   await connectToDatabase()
 
   const queryFilter =
@@ -263,10 +265,10 @@ export async function getRelatedProductsByCategory({
   limit?: number
   page: number
 }) {
-  // const {
-  //   common: { pageSize },
-  // } = await getSetting()
-  // limit = limit || pageSize
+  const {
+    common: { pageSize },
+  } = await getSetting()
+  limit = limit || pageSize
   await connectToDatabase()
   const skipAmount = (Number(page) - 1) * limit
   const conditions = {

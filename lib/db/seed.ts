@@ -1,52 +1,58 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import data from '@/lib/data/data'
 import { connectToDatabase } from '.'
-
+import User from './models/user.model'
+import Product from './models/product.model'
+import Review from './models/review.model'
 import { cwd } from 'process'
 import { loadEnvConfig } from '@next/env'
-import Product from './models/product.model'
-import User from './models/user.model'
-import Review from './models/review.model'
 import Order from './models/order.model'
-import { IOrderInput, OrderItem, ShippingAddress } from '@/types'
 import {
-  generateId,
-  calculatePastDate,
   calculateFutureDate,
+  calculatePastDate,
+  generateId,
   round2,
 } from '../utils'
-import { AVAILABLE_DELIVERY_DATES } from '../constants'
 import WebPage from './models/web-page.model'
+import Setting from './models/setting.model'
+import { OrderItem, IOrderInput, ShippingAddress } from '@/types'
+import data from '../data/data'
 
 loadEnvConfig(cwd())
 
 /**
  * Seeds the database with sample data.
  *
- * The data includes:
- * - 5 users
- * - 5 products with sample data
- * - 10 reviews for each product, with a mix of verified and unverified purchases
- * - 200 orders, each with a random user and product
+ * This function performs the following operations:
+ * - Connects to the database using the connection URI from environment variables.
+ * - Deletes existing data in the User, Setting, WebPage, Product, Review, and Order collections.
+ * - Inserts sample users, settings, web pages, and products into their respective collections.
+ * - Generates and inserts sample reviews for each product based on their rating distribution.
+ * - Generates and inserts 200 sample orders, each associated with random users and products.
+ * - Logs the created data and a success message to the console upon successful seeding.
+ * - Exits the process after completion.
  *
- * The seed data is just a sample and you should replace it with your own data.
+ * Throws an error if any operation fails during the seeding process.
  */
 const main = async () => {
   try {
-    const { products, users, reviews, webPages } = data
+    const { users, products, reviews, webPages, settings } = data
     await connectToDatabase(process.env.MONGODB_URI)
 
-    //Users
     await User.deleteMany()
-    const createdUsers = await User.insertMany(users)
+    const createdUser = await User.insertMany(users)
 
-    //Products
+    await Setting.deleteMany()
+    const createdSetting = await Setting.insertMany(settings)
+
+    await WebPage.deleteMany()
+    await WebPage.insertMany(webPages)
+
     await Product.deleteMany()
-    const createdProducts = await Product.insertMany(products)
+    const createdProducts = await Product.insertMany(
+      products.map((x) => ({ ...x, _id: undefined }))
+    )
 
-    //Reviews
     await Review.deleteMany()
-    // create sample review for all products
     const rws = []
     for (let i = 0; i < createdProducts.length; i++) {
       let x = 0
@@ -60,7 +66,7 @@ const main = async () => {
             ],
             isVerifiedPurchase: true,
             product: createdProducts[i]._id,
-            user: createdUsers[x % createdUsers.length]._id,
+            user: createdUser[x % createdUser.length]._id,
             updatedAt: Date.now(),
             createdAt: Date.now(),
           })
@@ -69,27 +75,25 @@ const main = async () => {
     }
     const createdReviews = await Review.insertMany(rws)
 
-    //Orders
     await Order.deleteMany()
     const orders = []
     for (let i = 0; i < 200; i++) {
       orders.push(
         await generateOrder(
           i,
-          createdUsers.map((x) => x._id),
+          createdUser.map((x) => x._id),
           createdProducts.map((x) => x._id)
         )
       )
     }
-
-    //WebPages
-    await WebPage.deleteMany()
-    await WebPage.insertMany(webPages)
-
+    const createdOrders = await Order.insertMany(orders)
+    
     console.log({
-      createdUsers,
+      createdUser,
       createdProducts,
       createdReviews,
+      createdOrders,
+      createdSetting,
       message: 'Seeded database successfully',
     })
     process.exit(0)
@@ -100,11 +104,17 @@ const main = async () => {
 }
 
 /**
- * Generates an order with a given index, array of user IDs and array of product IDs.
- * @param {number} i - The index of the order.
- * @param {any} users - An array of user IDs.
- * @param {any} products - An array of product IDs.
- * @returns {Promise<IOrderInput>} The generated order.
+ * Generates an order object with specified index, user, and product details.
+ *
+ * This function retrieves three products based on the given index and constructs
+ * an order containing these products as items. It also associates the order with
+ * a user and assigns shipping, payment, and delivery details.
+ *
+ * @param {number} i - The index used to determine the user and products for the order.
+ * @param {any} users - An array of user IDs to associate the order with a specific user.
+ * @param {any} products - An array of product IDs to retrieve products for the order items.
+ * @returns {Promise<IOrderInput>} A promise that resolves to the generated order object.
+ * @throws Will throw an error if any of the products cannot be found.
  */
 const generateOrder = async (
   i: number,
@@ -203,8 +213,7 @@ export const calcDeliveryDateAndPriceForSeed = ({
   items: OrderItem[]
   shippingAddress?: ShippingAddress
 }) => {
-  // const { availableDeliveryDates } = data.settings[0]
-  const availableDeliveryDates = AVAILABLE_DELIVERY_DATES
+  const { availableDeliveryDates } = data.settings[0]
   const itemsPrice = round2(
     items.reduce((acc, item) => acc + item.price * item.quantity, 0)
   )

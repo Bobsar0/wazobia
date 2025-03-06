@@ -1,6 +1,7 @@
 import { SearchIcon } from 'lucide-react'
 
 import { Input } from '@/components/ui/input'
+import { getAllCategories } from '@/lib/actions/product.actions'
 
 import {
   Select,
@@ -9,32 +10,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../ui/select'
-import { APP_NAME } from '@/lib/constants'
-import { getAllCategories } from '@/lib/actions/product.actions'
-
+import { getSetting } from '@/lib/actions/setting.actions'
+import { getTranslations } from 'next-intl/server'
 
 /**
- * Renders a search form component with category selection and a search input.
- * 
- * The search form allows users to select a product category from a dropdown
- * and enter a search query. It submits the search request to the '/search' endpoint
- * using the GET method.
- * 
- * The function asynchronously fetches all available categories to populate the dropdown.
- * 
- * @returns A JSX element representing the search form.
+ * A search form component which renders a select for categories and an input
+ * for search terms. The form is submitted to the /search endpoint.
+ *
+ * The component fetches all categories from the server and uses the
+ * t('Header.All') translation for the placeholder of the select and the
+ * t('Header.Search Site', { name }) translation for the placeholder of the input.
+ *
+ * @returns A search form component.
  */
 export default async function Search() {
-  const categories = await getAllCategories();
+  const {
+    site: { name },
+  } = await getSetting()
+  const categories = await getAllCategories()
 
+  const t = await getTranslations()
   return (
-    <form action='/search' method='GET' className='flex items-stretch h-10 '>
+    <form action='/search' method='GET' className='flex  items-stretch h-10 '>
       <Select name='category'>
         <SelectTrigger className='w-auto h-full dark:border-gray-200 bg-gray-100 text-black border-r  rounded-r-none rounded-l-md rtl:rounded-r-md rtl:rounded-l-none  '>
-          <SelectValue placeholder='All' />
+          <SelectValue placeholder={t('Header.All')} />
         </SelectTrigger>
         <SelectContent position='popper'>
-          <SelectItem value='all'>All</SelectItem>
+          <SelectItem value='all'>{t('Header.All')}</SelectItem>
           {categories.map((category) => (
             <SelectItem key={category} value={category}>
               {category}
@@ -44,7 +47,7 @@ export default async function Search() {
       </Select>
       <Input
         className='flex-1 rounded-none dark:border-gray-200 bg-gray-100 text-black text-base h-full'
-        placeholder={`Search ${APP_NAME}`}
+        placeholder={t('Header.Search Site', { name })}
         name='q'
         type='search'
       />

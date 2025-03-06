@@ -1,22 +1,24 @@
 import { usePathname } from 'next/navigation'
 import useDeviceType from './use-device-type'
 import useCartStore from './use-cart-store'
+import { i18n } from '@/i18n-config'
 
-// const locales = i18n.locales
-//   .filter((locale) => locale.code !== 'en-US')
-//   .map((locale) => locale.code)
+const locales = i18n.locales
+  .filter((locale) => locale.code !== 'en-US')
+  .map((locale) => locale.code)
 
-  /**
-   * Tests if a given string is not in the set of paths where the cart sidebar
-   * should not be shown.
-   *
-   * @param s - The string to test.
-   * @returns True if the string is not in the set of paths, false otherwise.
-   */
+/**
+ * Tests if a given string is not in the set of paths where the cart sidebar
+ * should not be shown.
+ *
+ * @param s - The string to test.
+ * @returns True if the string is not in the set of paths, false otherwise.
+ */
 const isNotInPaths = (s: string) => {
-  // const localePattern = `/(?:${locales.join('|')})` // Match locales
-  const pathsPattern = `^(?:)?(?:/$|/cart$|/checkout$|/sign-in$|/sign-up$|/order(?:/.*)?$|/account(?:/.*)?$|/admin(?:/.*)?$)?$`
-  // const pathsPattern = `!/^\/$|^\/cart$|/checkout$|/sign-in$|/sign-up$|/order(?:/.*)?$|/account(?:/.*)?$|/admin(?:/.*)?$)?$`
+  console.log('is string in locales?', locales, s)
+  const localePattern = `/(?:${locales.join('|')})` // Match locales
+  const pathsPattern = `^(?:${localePattern})?(?:/$|/cart$|/checkout$|/sign-in$|/sign-up$|/order(?:/.*)?$|/account(?:/.*)?$|/admin(?:/.*)?$)?$`
+  console.log(!new RegExp(pathsPattern).test(s))
   return !new RegExp(pathsPattern).test(s)
 }
 
